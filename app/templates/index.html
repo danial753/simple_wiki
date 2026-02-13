@@ -1,0 +1,64 @@
+{# templates/index.html #}
+{% extends "base.html" %}
+{% block title %}صفحه اصلی — ساده‌ویکی{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="mb-0">صفحات اخیر</h3>
+    <div class="muted small">تعداد صفحات: {{ pages|length }}</div>
+  </div>
+  <div>
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('wiki.discover') }}">کاوش</a>
+    {% if current_user.is_authenticated %}
+      <a class="btn btn-primary btn-sm" href="{{ url_for('wiki.edit_page', page_slug='new') }}">صفحه جدید</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  {% for item in pages %}
+    {# item ممکن است یک slug (string) یا dict/meta باشد. #}
+    {% if item is string %}
+      {% set slug = item %}
+      {% set title = slug.replace('-', ' ') %}
+      {% set excerpt = '' %}
+      {% set feature = None %}
+    {% else %}
+      {# برای دیکشنری یا object مقاوم عمل کن #}
+      {% set slug = item.slug if item is mapping and item.get('slug') is none and (item.get('slug') is defined) is not none else (item.get('slug') if item.get('slug') else (item.slug if item.slug is defined else '')) %}
+      {# بالا ممکنه پیچیده به‌نظر بیاید؛ امن‌تر: از get استفاده کن (در Jinja دیکشنری‌ها معمولاً get دارن) #}
+      {% set slug = item.get('slug') if item.get('slug', None) else (item.slug if item.slug is defined else '') %}
+      {% set title = (item.get('title') if item.get('title') else (item.title if item.title is defined else (slug.replace('-', ' ') if slug else 'بدون عنوان'))) %}
+      {% set excerpt = (item.get('excerpt') if item.get('excerpt') else (item.excerpt if item.excerpt is defined else '')) %}
+      {% set feature = (item.get('feature_image') if item.get('feature_image') else (item.feature_image if item.feature_image is defined else None)) %}
+    {% endif %}
+
+    {% if slug %}
+      <div class="col-md-6">
+        <a class="text-decoration-none" href="{{ url_for('wiki.view_page', page_name=slug) }}">
+          <div class="card card-glass p-3 h-100">
+            <h5 class="mb-1">{{ title }}</h5>
+            <p class="muted small mb-2">{{ excerpt or "خلاصه‌ای موجود نیست." }}</p>
+            {% if feature %}
+              <img src="{{ url_for('wiki.uploaded_file', filename=feature) }}" class="img-fluid rounded" style="max-height:120px;">
+            {% endif %}
+          </div>
+        </a>
+      </div>
+    {% else %}
+      {# در صورت نبود slug، یک کارت ساده نمایش بده #}
+      <div class="col-12">
+        <div class="card card-glass p-3">
+          <h5 class="mb-1">{{ title }}</h5>
+          <p class="muted small mb-2">{{ excerpt or "خلاصه‌ای موجود نیست." }}</p>
+        </div>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="col-12">
+      <div class="card card-glass p-4 text-center">هیچ صفحه‌ای موجود نیست.</div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

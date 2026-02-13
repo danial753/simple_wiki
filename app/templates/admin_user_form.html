@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{% if user %}ویرایش کاربر{% else %}ایجاد کاربر{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card card-glass p-4">
+  <h4 class="mb-3">{% if user %}ویرایش کاربر{% else %}ایجاد کاربر{% endif %}</h4>
+  <form method="POST">
+    <div class="mb-2"><label class="form-label">نام کاربری</label><input name="username" class="form-control" value="{{ user.username if user else '' }}" required></div>
+    <div class="mb-2"><label class="form-label">ایمیل</label><input name="email" class="form-control" value="{{ user.email if user else '' }}" required></div>
+    <div class="mb-2"><label class="form-label">نام کامل</label><input name="full_name" class="form-control" value="{{ user.full_name if user else '' }}"></div>
+    <div class="mb-2"><label class="form-label">نقش</label>
+      <select name="role" class="form-select">
+        <option value="user" {% if user and user.role=='user' %}selected{% endif %}>کاربر</option>
+        <option value="editor" {% if user and user.role=='editor' %}selected{% endif %}>ویرایشگر</option>
+        <option value="admin" {% if user and user.role=='admin' %}selected{% endif %}>ادمین</option>
+      </select>
+    </div>
+    <div class="mb-2"><label class="form-label">رمز عبور {% if user %}(برای تغییر وارد کنید){% endif %}</label><input name="password" class="form-control" {% if not user %}required{% endif %}></div>
+    <div class="mt-3"><button class="btn btn-primary">{% if user %}بروزرسانی{% else %}ایجاد{% endif %}</button></div>
+  </form>
+</div>
+{% endblock %}

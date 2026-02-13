@@ -1,0 +1,10 @@
+/* comments.css */
+.avatar-md { width:48px; height:48px; object-fit:cover; border-radius:50%; }
+.avatar-sm { width:36px; height:36px; object-fit:cover; border-radius:50%; }
+
+#comments .card-body { background: #fff; }
+.comment-item { padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
+.comment-content { font-size: 14px; color: #222; line-height:1.45; }
+.comment-actions a { text-decoration:none; color:#6c757d; margin-left:8px; cursor:pointer; }
+.inline-comment-form { margin-top:8px; }
+.inline-textarea { resize: vertical; min-height:48px; }

@@ -1,0 +1,17 @@
+<article class="card p-3 mb-3 d-flex gap-3 align-items-start">
+  <div style="flex:1;">
+    <a class="h5 text-decoration-none" href="{{ it.url }}">{{ it.title }}</a>
+    <p class="muted small mb-2">{{ it.excerpt }}</p>
+    <div class="d-flex gap-2 flex-wrap">
+      {% for t in it.tags %}
+        <button class="btn btn-sm btn-outline-secondary tag-filter-btn" data-tag="{{ t }}">{{ t }}</button>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if it.feature_image %}
+    <div style="width:140px;flex-shrink:0;">
+      <img src="{{ url_for('uploaded_file', filename=it.feature_image) }}" class="img-fluid rounded" alt="feature">
+    </div>
+  {% endif %}
+</article>

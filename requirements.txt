@@ -1,0 +1,9 @@
+Flask
+Flask-Login
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Caching
+Pillow
+python-slugify
+werkzeug
+bleach

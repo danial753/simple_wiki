@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}آپلود فایل{% endblock %}
+{% block content %}
+    <h1>آپلود عکس یا ویدیو</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" class="form-control">
+        <button type="submit" class="btn btn-primary mt-3">آپلود</button>
+    </form>
+    <p>پس از آپلود، لینک رو کپی کن (مثل uploads/filename.jpg) و در Markdown صفحه بذار.</p>
+{% endblock %}

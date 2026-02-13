@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}مدیریت کاربران{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">مدیریت کاربران</h4>
+  <a class="btn btn-success btn-sm" href="{{ url_for('admin_user_new') }}">اضافه کردن کاربر</a>
+</div>
+
+<form class="d-flex mb-3" action="{{ url_for('admin_users') }}" method="GET">
+  <input name="search" class="form-control me-2" placeholder="جستجو کاربران" value="{{ search_query }}">
+  <button class="btn btn-outline-primary" type="submit">جستجو</button>
+</form>
+
+<table class="table table-striped">
+  <thead>
+    <tr><th>ID</th><th>نام کاربری</th><th>نام کامل</th><th>ایمیل</th><th>نقش</th><th>اقدامات</th></tr>
+  </thead>
+  <tbody>
+    {% for user in users.items %}
+      <tr id="user-{{ user.id }}">
+        <td>{{ user.id }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.full_name or '' }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.role }}</td>
+        <td>
+          <a class="btn btn-sm btn-primary" href="{{ url_for('admin_user_edit', user_id=user.id) }}">ویرایش</a>
+          <form action="{{ url_for('admin_user_delete', user_id=user.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('آیا حذف شود؟');">
+            <button class="btn btn-sm btn-danger">حذف</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<nav>
+  <ul class="pagination">
+    {% if users.has_prev %}<li class="page-item"><a class="page-link" href="{{ url_for('admin_users', page=users.prev_num, search=search_query) }}">قبلی</a></li>{% endif %}
+    {% for p in users.iter_pages() %}
+      {% if p %}<li class="page-item {% if p==users.page %}active{% endif %}"><a class="page-link" href="{{ url_for('admin_users', page=p, search=search_query) }}">{{ p }}</a></li>{% else %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+    {% endfor %}
+    {% if users.has_next %}<li class="page-item"><a class="page-link" href="{{ url_for('admin_users', page=users.next_num, search=search_query) }}">بعدی</a></li>{% endif %}
+  </ul>
+</nav>
+{% endblock %}

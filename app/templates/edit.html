@@ -1,0 +1,621 @@
+{% extends "base.html" %}
+{% block title %}
+  {% if is_new %}ساخت صفحه جدید{% else %}ویرایش صفحه{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+  :root {
+    --primary: #0d6efd;
+    --primary-dark: #0a58ca;
+    --light-bg: #f8f9fc;
+    --card-bg: #ffffff;
+    --shadow: 0 10px 30px rgba(0,0,0,0.06);
+  }
+
+  body {
+    background: linear-gradient(135deg, var(--light-bg), #e9f0ff);
+    font-family: 'Vazirmatn', system-ui, sans-serif;
+    direction: rtl;
+  }
+
+  .editor-wrapper {
+    max-width: 1450px;
+    margin: 0 auto;
+  }
+
+  .editor-card, .preview-panel {
+    border: none;
+    border-radius: 16px;
+    background: var(--card-bg);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .preview-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .preview-body {
+    padding: 1.5rem;
+  }
+
+  .preview-img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .tag-pill, .person-pill {
+    background: #e7f1ff;
+    color: var(--primary);
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.92rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0.4rem 0.4rem 0.4rem 0;
+  }
+
+  .dropzone {
+    border: 2px dashed #c5d9ff;
+    border-radius: 12px;
+    padding: 2.8rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: #f8fcff;
+  }
+
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--primary);
+    background: #eef7ff;
+    box-shadow: 0 0 0 3px rgba(13,110,253,0.15);
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.55rem;
+  }
+
+  .btn-save {
+    min-width: 160px;
+  }
+
+  .thumb-preview {
+    position: relative;
+    display: inline-block;
+    margin: 0.5rem;
+  }
+
+  .thumb-img, .thumb-video {
+    width: 120px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .remove-thumb {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .person-input-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 991px) {
+    .preview-panel {
+      position: static;
+      margin-top: 2rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container editor-wrapper py-5">
+  <div class="row g-4">
+
+    <!-- فرم ویرایش -->
+    <div class="col-lg-7">
+      <div class="editor-card p-4 p-lg-5">
+        <h4 class="mb-4 fw-bold text-center text-primary">
+          {% if is_new %}ایجاد صفحه جدید{% else %}ویرایش صفحه{% endif %}
+        </h4>
+
+        <form id="pageForm" method="POST" enctype="multipart/form-data">
+          <!-- عنوان -->
+          <div class="mb-4">
+            <label for="pageTitle" class="form-label">عنوان <span class="text-danger">*</span></label>
+            <input type="text" name="page_title" id="pageTitle" class="form-control form-control-lg"
+                   value="{{ page_title or '' }}" placeholder="عنوان صفحه را وارد کنید" required>
+          </div>
+
+          <!-- زیرعنوان (اختیاری) -->
+          <div class="mb-4">
+            <label for="subtitle" class="form-label">زیرعنوان / شعار کوتاه</label>
+            <input type="text" name="subtitle" id="subtitle" class="form-control"
+                   value="{{ subtitle or '' }}" placeholder="مثال: راهنمای جامع توسعه وب">
+          </div>
+
+          <!-- تگ‌ها -->
+          <div class="mb-4">
+            <label class="form-label">تگ‌ها (با Enter یا کاما جدا کنید)</label>
+            <div class="input-group mb-2">
+              <input id="tagInput" type="text" class="form-control" placeholder="مثال: پایتون, آموزش, وب">
+              <button id="addTagBtn" class="btn btn-outline-primary" type="button">افزودن</button>
+            </div>
+            <div id="tagsContainer" class="d-flex flex-wrap"></div>
+            <input type="hidden" name="tags" id="tagsHidden" value="{{ tags if tags is defined else '' }}">
+          </div>
+
+          <!-- تصویر شاخص -->
+          <div class="mb-4">
+            <label for="featureInput" class="form-label">تصویر شاخص (پیشنهاد: 1200×630)</label>
+            <input id="featureInput" name="feature_image" type="file" class="form-control" accept="image/*">
+            <div class="mt-3 text-center">
+              <img id="featurePreview" src="{{ feature_image_url if feature_image_url else '' }}"
+                   class="preview-img" style="{% if not feature_image_url %}display:none;{% endif %}">
+            </div>
+          </div>
+
+          <!-- گالری تصاویر (چندتایی) -->
+          <div class="mb-4">
+            <label class="form-label">مستندات تصویری (چندین عکس)</label>
+            <div id="galleryDropzone" class="dropzone mb-3">
+              <i class="bi bi-images fs-1 text-primary"></i>
+              <div class="mt-2">عکس‌ها را بکشید یا کلیک کنید</div>
+              <small class="text-muted d-block mt-1">پشتیبانی: jpg, png, gif - حداکثر 5 مگابایت هر عکس</small>
+            </div>
+            <input id="galleryInput" type="file" accept="image/*" multiple style="display:none;">
+            <div id="galleryThumbs" class="d-flex flex-wrap mt-3"></div>
+            <input type="hidden" name="gallery_images" id="galleryHidden" value="{{ gallery|join(',') if gallery else '' }}">
+          </div>
+
+          <!-- ویدیوها (چندتایی با حجم بالا) -->
+          <div class="mb-4">
+            <label class="form-label">مستندات ویدیویی (چندین ویدیو تا 2 گیگ)</label>
+            <div id="videoDropzone" class="dropzone mb-3">
+              <i class="bi bi-film fs-1 text-primary"></i>
+              <div class="mt-2">ویدیوها را بکشید یا کلیک کنید</div>
+              <small class="text-muted d-block mt-1">پشتیبانی: mp4, mov - آپلود chunked برای فایل‌های بزرگ</small>
+            </div>
+            <input id="videoInput" type="file" accept="video/*" multiple style="display:none;">
+            <div id="videoThumbs" class="d-flex flex-wrap mt-3"></div>
+            <input type="hidden" name="videos" id="videosHidden" value="{{ videos|join(',') if videos else '' }}">
+            <small id="videoStatus" class="d-block text-muted mt-2"></small>
+          </div>
+
+          <!-- اعضای تیم / افراد درگیر -->
+          <div class="mb-4">
+            <label class="form-label">افراد درگیر و مسئولیت‌ها</label>
+            <div id="personnelContainer"></div>
+            <button id="addPersonBtn" type="button" class="btn btn-outline-primary btn-sm mt-2">
+              <i class="bi bi-plus-circle me-1"></i> افزودن فرد
+            </button>
+            <input type="hidden" name="personnel" id="personnelHidden" value="{{ personnel|tojson|safe if personnel else '[]' }}">
+          </div>
+
+          <!-- محتوا -->
+          <div class="mb-5">
+            <label for="editor" class="form-label">محتوای اصلی صفحه</label>
+            <textarea id="editor" name="content">{{ content | safe }}</textarea>
+          </div>
+
+          <!-- دکمه‌ها -->
+          <div class="d-flex flex-wrap gap-3 justify-content-end">
+            <a href="{{ url_for('wiki.index') }}" class="btn btn-outline-secondary px-4 py-2">
+              انصراف
+            </a>
+            <button id="saveBtn" type="submit" class="btn btn-primary btn-save px-5 py-2">
+              <i class="bi bi-save me-2"></i> ذخیره صفحه
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- پیش‌نمایش زنده -->
+    <div class="col-lg-5">
+      <div class="preview-panel">
+        <div class="preview-header">
+          <h5 class="mb-0 fw-bold">پیش‌نمایش زنده</h5>
+          <small class="opacity-75">تغییرات به صورت آنی نمایش داده می‌شود</small>
+        </div>
+
+        <div class="preview-body">
+          <img id="previewImg" src="{{ feature_image_url if feature_image_url else '/static/placeholder.jpg' }}"
+               class="preview-img mb-4" alt="پیش‌نمایش">
+
+          <h3 id="previewTitle" class="fw-bold mb-2">{{ page_title or 'عنوان صفحه' }}</h3>
+
+          <div id="previewSubtitle" class="text-muted mb-3">{{ subtitle or 'زیرعنوان / شعار کوتاه' }}</div>
+
+          <div id="previewTags" class="mb-4 d-flex flex-wrap"></div>
+
+          <div id="previewPersonnel" class="mb-4">
+            <h6 class="fw-semibold mb-2">افراد درگیر:</h6>
+            <div class="d-flex flex-wrap gap-2"></div>
+          </div>
+
+          <div id="previewGallery" class="mb-4">
+            <h6 class="fw-semibold mb-2">مستندات تصویری:</h6>
+            <div class="d-flex flex-wrap gap-2"></div>
+          </div>
+
+          <div id="previewVideos" class="mb-4">
+            <h6 class="fw-semibold mb-2">مستندات ویدیویی:</h6>
+            <div class="d-flex flex-wrap gap-2"></div>
+          </div>
+
+          <div class="content-preview border-top pt-4 lh-lg text-secondary">
+            {{ content | safe or '<p class="text-muted fst-italic text-center py-5">محتوا اینجا نمایش داده می‌شود...</p>' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/43.1.0/classic/ckeditor.js"></script>
+
+<script>
+// متغیرهای اولیه
+let tags = {{ (tags.split(',') if tags is defined and tags else []) | tojson }};
+let gallery = {{ gallery|tojson if gallery is defined else '[]' }};
+let videos = {{ videos|tojson if videos is defined else '[]' }};
+let personnel = {{ personnel|tojson if personnel is defined else '[]' }};
+
+// تابع کمک‌کننده برای ایجاد المان
+const createEl = (tag, attrs = {}, children = []) => {
+  const el = document.createElement(tag);
+  Object.assign(el, attrs);
+  children.forEach(child => el.appendChild(child));
+  return el;
+};
+
+// مدیریت تگ‌ها
+const tagInput = document.getElementById('tagInput');
+const addTagBtn = document.getElementById('addTagBtn');
+const tagsContainer = document.getElementById('tagsContainer');
+const tagsHidden = document.getElementById('tagsHidden');
+const previewTags = document.getElementById('previewTags');
+
+function renderTags() {
+  tagsContainer.innerHTML = '';
+  previewTags.innerHTML = '';
+
+  tags.forEach((tag, i) => {
+    const pill = createEl('span', { className: 'tag-pill' }, [
+      document.createTextNode(tag),
+      createEl('button', { type: 'button', className: 'btn-close btn-close-sm ms-1', style: 'font-size:0.65rem;', onclick: () => {
+        tags.splice(i, 1);
+        renderTags();
+      }})
+    ]);
+    tagsContainer.appendChild(pill);
+
+    const prevPill = createEl('span', { className: 'badge bg-primary-subtle text-primary me-2 mb-2 px-3 py-2' }, [
+      document.createTextNode(tag)
+    ]);
+    previewTags.appendChild(prevPill);
+  });
+
+  tagsHidden.value = tags.join(',');
+}
+
+addTagBtn.onclick = () => {
+  let value = tagInput.value.trim();
+  if (!value) return;
+  value.split(',').forEach(v => {
+    v = v.trim();
+    if (v && !tags.includes(v)) tags.push(v);
+  });
+  renderTags();
+  tagInput.value = '';
+  tagInput.focus();
+};
+
+tagInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addTagBtn.click();
+  }
+});
+
+renderTags();
+
+// پیش‌نمایش تصویر شاخص
+document.getElementById('featureInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = document.getElementById('previewImg');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+
+// همگام‌سازی عنوان و زیرعنوان
+document.getElementById('pageTitle').addEventListener('input', function() {
+  document.getElementById('previewTitle').textContent = this.value.trim() || 'عنوان صفحه';
+});
+
+document.getElementById('subtitle').addEventListener('input', function() {
+  document.getElementById('previewSubtitle').textContent = this.value.trim() || 'زیرعنوان / شعار کوتاه';
+});
+
+// مدیریت گالری تصاویر
+const galleryDropzone = document.getElementById('galleryDropzone');
+const galleryInput = document.getElementById('galleryInput');
+const galleryThumbs = document.getElementById('galleryThumbs');
+const galleryHidden = document.getElementById('galleryHidden');
+const previewGallery = document.getElementById('previewGallery').querySelector('.d-flex');
+
+galleryDropzone.onclick = () => galleryInput.click();
+
+galleryDropzone.addEventListener('dragover', e => {
+  e.preventDefault();
+  galleryDropzone.classList.add('dragover');
+});
+
+galleryDropzone.addEventListener('dragleave', () => galleryDropzone.classList.remove('dragover'));
+
+galleryDropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  galleryDropzone.classList.remove('dragover');
+  handleGalleryFiles(e.dataTransfer.files);
+});
+
+galleryInput.addEventListener('change', e => handleGalleryFiles(e.target.files));
+
+function handleGalleryFiles(files) {
+  Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      gallery.push(ev.target.result); // URL موقت
+      renderGallery();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderGallery() {
+  galleryThumbs.innerHTML = '';
+  previewGallery.innerHTML = '';
+
+  gallery.forEach((url, i) => {
+    const thumb = createEl('div', { className: 'thumb-preview' }, [
+      createEl('img', { src: url, className: 'thumb-img' }),
+      createEl('button', { className: 'remove-thumb', innerText: '×', onclick: () => {
+        gallery.splice(i, 1);
+        renderGallery();
+      }})
+    ]);
+    galleryThumbs.appendChild(thumb);
+
+    const prevThumb = createEl('img', { src: url, className: 'thumb-img me-2 mb-2' });
+    previewGallery.appendChild(prevThumb);
+  });
+
+  galleryHidden.value = gallery.join(',');
+}
+
+renderGallery();
+
+// مدیریت ویدیوها
+const videoDropzone = document.getElementById('videoDropzone');
+const videoInput = document.getElementById('videoInput');
+const videoThumbs = document.getElementById('videoThumbs');
+const videosHidden = document.getElementById('videosHidden');
+const videoStatus = document.getElementById('videoStatus');
+const previewVideos = document.getElementById('previewVideos').querySelector('.d-flex');
+
+videoDropzone.onclick = () => videoInput.click();
+
+videoDropzone.addEventListener('dragover', e => {
+  e.preventDefault();
+  videoDropzone.classList.add('dragover');
+});
+
+videoDropzone.addEventListener('dragleave', () => videoDropzone.classList.remove('dragover'));
+
+videoDropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  videoDropzone.classList.remove('dragover');
+  handleVideoFiles(e.dataTransfer.files);
+});
+
+videoInput.addEventListener('change', e => handleVideoFiles(e.target.files));
+
+async function handleVideoFiles(files) {
+  for (let file of Array.from(files)) {
+    if (!file.type.startsWith('video/')) continue;
+    if (file.size > 2 * 1024 * 1024 * 1024) {
+      alert('فایل بیش از 2 گیگ است');
+      continue;
+    }
+
+    const tempUrl = URL.createObjectURL(file);
+    videos.push(tempUrl);
+    renderVideos();
+
+    videoStatus.textContent = `در حال آپلود ${file.name}...`;
+
+    // در اینجا فقط پیش‌نمایش نشان داده می‌شود
+    // اگر می‌خواهید واقعاً آپلود شود، باید endpointهای chunk را در بک‌اند داشته باشید
+  }
+}
+
+function renderVideos() {
+  videoThumbs.innerHTML = '';
+  previewVideos.innerHTML = '';
+
+  videos.forEach((url, i) => {
+    const thumb = createEl('div', { className: 'thumb-preview' }, [
+      createEl('video', { src: url, className: 'thumb-video', controls: true }),
+      createEl('button', { className: 'remove-thumb', innerText: '×', onclick: () => {
+        videos.splice(i, 1);
+        renderVideos();
+      }})
+    ]);
+    videoThumbs.appendChild(thumb);
+
+    const prevThumb = createEl('video', { src: url, className: 'thumb-video me-2 mb-2', controls: true });
+    previewVideos.appendChild(prevThumb);
+  });
+
+  videosHidden.value = videos.join(',');
+}
+
+renderVideos();
+
+// مدیریت افراد درگیر – نسخه نهایی بدون مشکل فوکوس و دکمه افزودن کار می‌کند
+const personnelContainer = document.getElementById('personnelContainer');
+const addPersonBtn = document.getElementById('addPersonBtn');
+const personnelHidden = document.getElementById('personnelHidden');
+const previewPersonnel = document.getElementById('previewPersonnel').querySelector('.d-flex');
+
+function renderPersonnel() {
+  personnelContainer.innerHTML = '';
+  previewPersonnel.innerHTML = '';
+
+  personnel.forEach((person, i) => {
+    const group = createEl('div', { className: 'person-input-group mb-3' });
+
+    const nameInput = createEl('input', {
+      type: 'text',
+      className: 'form-control',
+      placeholder: 'نام فرد',
+      value: person.name || ''
+    });
+
+    const roleInput = createEl('input', {
+      type: 'text',
+      className: 'form-control',
+      placeholder: 'مسئولیت',
+      value: person.role || ''
+    });
+
+    const deleteBtn = createEl('button', {
+      type: 'button',
+      className: 'btn btn-outline-danger',
+      innerText: 'حذف'
+    });
+
+    // حذف فرد
+    deleteBtn.onclick = () => {
+      personnel.splice(i, 1);
+      renderPersonnel();
+    };
+
+    // به‌روزرسانی بدون رندر مجدد کل لیست
+    nameInput.oninput = function() {
+      person.name = this.value;
+      updatePersonnelPreview();
+      personnelHidden.value = JSON.stringify(personnel);
+    };
+
+    roleInput.oninput = function() {
+      person.role = this.value;
+      updatePersonnelPreview();
+      personnelHidden.value = JSON.stringify(personnel);
+    };
+
+    group.appendChild(nameInput);
+    group.appendChild(roleInput);
+    group.appendChild(deleteBtn);
+    personnelContainer.appendChild(group);
+
+    // پیش‌نمایش
+    const pill = createEl('span', { className: 'person-pill me-2 mb-2' }, [
+      document.createTextNode(`${person.name || 'نامشخص'} (${person.role || 'نامشخص'})`)
+    ]);
+    previewPersonnel.appendChild(pill);
+  });
+}
+
+function updatePersonnelPreview() {
+  previewPersonnel.innerHTML = '';
+
+  personnel.forEach(person => {
+    const pill = createEl('span', { className: 'person-pill me-2 mb-2' }, [
+      document.createTextNode(`${person.name || 'نامشخص'} (${person.role || 'نامشخص'})`)
+    ]);
+    previewPersonnel.appendChild(pill);
+  });
+}
+
+addPersonBtn.onclick = function() {
+  personnel.push({ name: '', role: '' });
+  renderPersonnel();
+  // فوکوس روی آخرین فیلد نام
+  const lastGroup = personnelContainer.lastElementChild;
+  if (lastGroup) {
+    lastGroup.querySelector('input[type="text"]:first-child').focus();
+  }
+};
+
+renderPersonnel();
+
+// CKEditor + همگام‌سازی محتوا
+ClassicEditor
+  .create(document.querySelector('#editor'), {
+    language: 'fa',
+    simpleUpload: {
+      uploadUrl: "{{ url_for('wiki.upload_file') }}",
+      withCredentials: true
+    },
+    toolbar: [
+      'heading', '|',
+      'bold', 'italic', 'underline', 'link', 'bulletedList', 'numberedList',
+      '|', 'uploadImage', 'mediaEmbed', 'insertTable',
+      '|', 'undo', 'redo'
+    ]
+  })
+  .then(editor => {
+    editor.model.document.on('change:data', () => {
+      document.querySelector('.content-preview').innerHTML = editor.getData() ||
+        '<p class="text-muted fst-italic text-center py-5">محتوا اینجا نمایش داده می‌شود...</p>';
+    });
+  })
+  .catch(err => console.error(err));
+
+// انیمیشن دکمه ذخیره
+document.getElementById('pageForm').addEventListener('submit', function(e) {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> در حال ذخیره...';
+});
+</script>
+{% endblock %}

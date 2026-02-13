@@ -1,0 +1,597 @@
+{% extends "base.html" %}
+{% block title %}{{ title or page_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row">
+    <div class="col-xl-10 mx-auto">
+
+      <article class="card shadow-sm overflow-hidden border-0 rounded-3">
+
+        {# === هدر / هیرو با تصویر شاخص === #}
+        {% if feature_image or (gallery and gallery|length > 0) %}
+        <div class="position-relative hero-wrapper">
+          {% if feature_image %}
+            <img src="{{ feature_image_url }}" alt="{{ title or page_name }}" class="w-100 hero-img" loading="lazy">
+          {% else %}
+            <img src="{{ url_for('wiki.uploaded_file', filename=gallery[0]) }}" alt="{{ title or page_name }}" class="w-100 hero-img" loading="lazy">
+          {% endif %}
+          <div class="hero-gradient"></div>
+          <div class="hero-content container">
+            <div class="row align-items-end">
+              <div class="col-md-9">
+                <h1 class="display-5 fw-bold text-white mb-2">{{ title or page_name }}</h1>
+                {% if subtitle %}
+                  <p class="h5 text-white-75 mb-3">{{ subtitle }}</p>
+                {% endif %}
+                {% if excerpt %}
+                  <p class="text-white-50 mb-0">{{ excerpt }}</p>
+                {% endif %}
+              </div>
+              <div class="col-md-3 text-md-end mt-4 mt-md-0">
+                <div class="d-inline-block bg-dark bg-opacity-50 px-3 py-2 rounded small text-white">
+                  Slug: <code>{{ page_name }}</code>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="card-body border-bottom bg-light">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+              <h1 class="h3 fw-bold mb-2">{{ title or page_name }}</h1>
+              {% if subtitle %}<p class="text-muted mb-2">{{ subtitle }}</p>{% endif %}
+              {% if excerpt %}<p class="text-muted small mb-0">{{ excerpt }}</p>{% endif %}
+            </div>
+            <div class="text-end small text-muted">
+              Slug: <code>{{ page_name }}</code>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="card-body py-4">
+          {# تگ‌ها + متادیتا #}
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              {% set effective_tags = tags or (page_meta.tags.split(',')|map('trim')|list if page_meta and page_meta.tags else []) %}
+              {% if effective_tags %}
+                <div class="d-flex flex-wrap gap-2">
+                  {% for t in effective_tags %}
+                    <a href="{{ url_for('wiki.discover', tag=t) }}" class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2 text-decoration-none">
+                      {{ t }}
+                    </a>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="d-flex gap-3 small text-muted align-items-center">
+              {% if page_meta and page_meta.updated_at %}
+                <div>آخرین بروزرسانی: {{ page_meta.updated_at.strftime("%Y-%m-%d") }}</div>
+              {% endif %}
+              <div>•</div>
+              <div>اندازه: {{ content|striptags|length }} کاراکتر</div>
+            </div>
+          </div>
+
+          {# افراد کلیدی / تیم #}
+          {% if personnel and personnel|length > 0 %}
+          <section class="mb-5">
+            <h5 class="mb-3 fw-semibold text-dark section-title">افراد کلیدی / تیم</h5>
+            <div class="row g-3">
+              {% for p in personnel %}
+              <div class="col-auto">
+                <div class="d-flex align-items-center gap-3 p-3 bg-white border rounded-3 shadow-sm personnel-card">
+                  <div class="flex-shrink-0">
+                    {% if p.avatar %}
+                      <img src="{{ url_for('wiki.uploaded_file', filename=p.avatar) }}" alt="{{ p.name or 'عضو تیم' }}" class="rounded-circle" width="56" height="56" style="object-fit:cover;">
+                    {% else %}
+                      <img src="{{ url_for('static', filename='images/default_avatar.png') }}" alt="default" class="rounded-circle" width="56" height="56">
+                    {% endif %}
+                  </div>
+                  <div>
+                    <div class="fw-semibold">{{ p.name or p.username or '—' }}</div>
+                    {% if p.role %}<div class="text-muted small">{{ p.role }}</div>{% endif %}
+                    {% if p.desc %}<div class="text-muted small mt-1">{{ p.desc }}</div>{% endif %}
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </section>
+          {% endif %}
+
+          {# گالری تصاویر #}
+          {% if gallery and gallery|length > 0 %}
+          <section class="mb-5">
+            <h5 class="mb-3 fw-semibold section-title">گالری تصاویر</h5>
+            <div class="row g-2 gallery-grid">
+              {% for img in gallery %}
+              <div class="col-6 col-sm-4 col-md-3">
+                <a href="#" class="gallery-item d-block rounded overflow-hidden shadow-sm"
+                   data-type="image"
+                   data-src="{{ url_for('wiki.uploaded_file', filename=img) }}">
+                  <img src="{{ url_for('wiki.uploaded_file', filename=img) }}"
+                       alt="تصویر گالری"
+                       class="img-fluid"
+                       loading="lazy"
+                       style="height:160px; object-fit:cover; width:100%;">
+                </a>
+              </div>
+              {% endfor %}
+            </div>
+          </section>
+          {% endif %}
+
+          {# ویدیوها #}
+          {% if videos and videos|length > 0 %}
+          <section class="mb-5">
+            <h5 class="mb-3 fw-semibold section-title">ویدیوها</h5>
+            <div class="row g-3">
+              {% for v in videos %}
+              <div class="col-12 col-md-6">
+                <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm video-card bg-dark">
+                  <video controls preload="metadata" class="w-100 h-100">
+                    <source src="{{ url_for('wiki.stream_video', filename=v) }}" type="video/mp4">
+                    مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
+                  </video>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </section>
+          {% endif %}
+
+          {# محتوای اصلی #}
+          <section class="content-body mb-5 lh-lg">
+            {{ content | safe }}
+          </section>
+
+          {# دکمه‌های اقدام – شرط اصلاح شده #}
+          <div class="d-flex flex-wrap gap-3 mb-5">
+            {% if current_user.is_authenticated and current_user.role in ['admin', 'editor'] %}
+              <a href="{{ url_for('wiki.edit_page', page_slug=page_name) }}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil me-1"></i> ویرایش صفحه
+              </a>
+            {% endif %}
+
+            {% if current_user.is_authenticated and current_user.role == 'admin' %}
+              <button id="btn-delete-page" data-slug="{{ page_name }}" class="btn btn-outline-danger">
+                <i class="bi bi-trash me-1"></i> حذف صفحه
+              </button>
+            {% endif %}
+
+            <div class="ms-auto d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText(location.href)" title="کپی لینک">
+                <i class="bi bi-link-45deg"></i>
+              </button>
+              <a class="btn btn-sm btn-outline-info" href="https://twitter.com/intent/tweet?text={{ title|urlencode }} — {{ request.url|urlencode }}" target="_blank">
+                <i class="bi bi-twitter-x"></i>
+              </a>
+            </div>
+          </div>
+
+          {# بخش نظرات – مستقیماً داخل صفحه #}
+          <section id="comments" class="mt-5">
+            <h4 class="mb-4 fw-semibold">نظرات کاربران</h4>
+
+            <div id="comments-list" class="mb-4">
+              {% if root_comments %}
+                {% for c in root_comments %}
+                  <div class="comment mb-4 p-3 border rounded bg-light" id="comment-{{ c.id }}">
+                    <div class="d-flex align-items-start">
+                      <img src="{{ url_for('wiki.uploaded_file', filename=c.user.avatar) if c.user.avatar else url_for('static', filename='images/default_avatar.png') }}"
+                           alt="{{ c.user.username }}" class="rounded-circle me-3" width="48" height="48" style="object-fit: cover;">
+
+                      <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-baseline mb-1">
+                          <strong class="text-dark">{{ c.user.username }}</strong>
+                          <small class="text-muted">{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+
+                        <div class="comment-body mb-2">{{ c.content | safe | replace('\n', '<br>') }}</div>
+
+                        <div class="small">
+                          {% if current_user.is_authenticated %}
+                            <a href="#" class="reply-link text-primary me-3" data-id="{{ c.id }}">پاسخ</a>
+                          {% endif %}
+
+                          {% if current_user.is_authenticated and (current_user.id == c.user_id or current_user.role == 'admin') %}
+                            <a href="#" class="edit-comment-link text-warning me-3" data-id="{{ c.id }}">ویرایش</a>
+                            <a href="#" class="delete-comment-link text-danger" data-id="{{ c.id }}">حذف</a>
+                          {% endif %}
+                        </div>
+
+                        {% if c.children %}
+                          <div class="ms-5 mt-3 border-start ps-3">
+                            {% for ch in c.children %}
+                              <div class="comment mb-3 p-3 border rounded bg-white">
+                                <div class="d-flex align-items-start">
+                                  <img src="{{ url_for('wiki.uploaded_file', filename=ch.user.avatar) if ch.user.avatar else url_for('static', filename='images/default_avatar.png') }}"
+                                       alt="{{ ch.user.username }}" class="rounded-circle me-3" width="40" height="40" style="object-fit: cover;">
+
+                                  <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-baseline mb-1">
+                                      <strong>{{ ch.user.username }}</strong>
+                                      <small class="text-muted">{{ ch.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+                                    <div class="comment-body mb-2">{{ ch.content | safe | replace('\n', '<br>') }}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            {% endfor %}
+                          </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div class="alert alert-light text-center py-4">
+                  هنوز نظری ثبت نشده است. اولین نظر را شما بنویسید!
+                </div>
+              {% endif %}
+            </div>
+
+            {% if current_user.is_authenticated %}
+            <div class="card border shadow-sm p-4">
+              <form id="comment-form" action="{{ url_for('wiki.add_comment', page_name=page_name) }}" method="post">
+                <textarea name="content" id="comment-content" class="form-control mb-3" rows="4" placeholder="نظر خود را اینجا بنویسید..." required></textarea>
+                <input type="hidden" name="parent_id" id="comment-parent-id" value="">
+                <div class="d-flex gap-2">
+                  <button type="submit" id="comment-submit" class="btn btn-primary px-4">ارسال نظر</button>
+                  <button type="button" id="comment-cancel" class="btn btn-outline-secondary" style="display:none;">انصراف از پاسخ</button>
+                </div>
+              </form>
+            </div>
+            {% else %}
+              <div class="alert alert-info mt-3">
+                برای ثبت نظر لطفاً <a href="{{ url_for('login') }}" class="alert-link">وارد شوید</a>.
+              </div>
+            {% endif %}
+          </section>
+        </div>
+      </article>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox modal -->
+<div class="modal fade" id="lbModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-body p-0 position-relative">
+        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-4 z-3" data-bs-dismiss="modal"></button>
+        <div id="lb-inner" class="text-center p-3"></div>
+        <button id="lb-prev" class="btn btn-lg btn-dark opacity-75 position-absolute top-50 start-0 translate-middle-y ms-3" aria-label="قبلی">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button id="lb-next" class="btn btn-lg btn-dark opacity-75 position-absolute top-50 end-0 translate-middle-y me-3" aria-label="بعدی">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+  .hero-wrapper {
+    height: 380px;
+    overflow: hidden;
+    position: relative;
+  }
+  .hero-img {
+    object-fit: cover;
+    transition: transform 0.7s ease;
+  }
+  .hero-wrapper:hover .hero-img {
+    transform: scale(1.06);
+  }
+  .hero-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.65) 100%);
+  }
+  .hero-content {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 2.5rem 2rem;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    color: #222;
+    position: relative;
+    padding-bottom: 0.6rem;
+  }
+  .section-title:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 60px;
+    height: 3px;
+    background: var(--bs-primary);
+    border-radius: 3px;
+  }
+
+  .personnel-card {
+    transition: all 0.2s ease;
+  }
+  .personnel-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+  }
+
+  .gallery-item {
+    transition: all 0.25s ease;
+  }
+  .gallery-item:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+  }
+
+  .content-body img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+  }
+
+  @media (max-width: 991px) {
+    .hero-wrapper { height: 300px; }
+  }
+  @media (max-width: 576px) {
+    .hero-wrapper { height: 240px; }
+    .hero-content { padding: 1.5rem; }
+  }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// متغیرهای جهانی
+const pageName = "{{ page_name }}"; // برای استفاده در URLهای AJAX
+const commentForm = document.getElementById('comment-form');
+const commentList = document.getElementById('comments-list');
+const parentIdInput = document.getElementById('comment-parent-id');
+const cancelReplyBtn = document.getElementById('comment-cancel');
+const submitBtn = document.getElementById('comment-submit');
+
+// ۱. ارسال نظر جدید یا پاسخ با AJAX
+if (commentForm) {
+  commentForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(commentForm);
+    const content = formData.get('content').trim();
+
+    if (!content) {
+      alert('لطفاً متن نظر را وارد کنید');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> در حال ارسال...';
+
+    try {
+      const response = await fetch(commentForm.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // اضافه کردن کامنت جدید به لیست بدون رفرش
+        addCommentToList(data.comment);
+        commentForm.reset();
+        parentIdInput.value = '';
+        cancelReplyBtn.style.display = 'none';
+        alert('نظر با موفقیت ثبت شد!');
+      } else {
+        alert('خطا: ' + (data.error || 'مشکلی پیش آمد'));
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('خطا در ارتباط با سرور');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'ارسال نظر';
+    }
+  });
+}
+
+// ۲. تابع اضافه کردن کامنت به DOM
+function addCommentToList(comment) {
+  const div = document.createElement('div');
+  div.className = 'comment mb-4 p-3 border rounded bg-light';
+  div.id = `comment-${comment.id}`;
+
+  div.innerHTML = `
+    <div class="d-flex align-items-start">
+      <img src="${comment.user.avatar_url || '/static/images/default_avatar.png'}"
+           alt="${comment.user.username}" class="rounded-circle me-3" width="48" height="48" style="object-fit:cover;">
+      <div class="flex-grow-1">
+        <div class="d-flex justify-content-between align-items-baseline mb-1">
+          <strong class="text-dark">${comment.user.username}</strong>
+          <small class="text-muted">${comment.created_at}</small>
+        </div>
+        <div class="comment-body mb-2">${comment.content.replace(/\n/g, '<br>')}</div>
+        <div class="small">
+          <a href="#" class="reply-link text-primary me-3" data-id="${comment.id}">پاسخ</a>
+          ${comment.can_edit ? `
+            <a href="#" class="edit-comment-link text-warning me-3" data-id="${comment.id}">ویرایش</a>
+            <a href="#" class="delete-comment-link text-danger" data-id="${comment.id}">حذف</a>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // اگر پاسخ است، داخل کامنت والد اضافه شود
+  if (comment.parent_id) {
+    const parent = document.getElementById(`comment-${comment.parent_id}`);
+    if (parent) {
+      let replies = parent.querySelector('.replies-container');
+      if (!replies) {
+        replies = document.createElement('div');
+        replies.className = 'ms-5 mt-3 border-start ps-3 replies-container';
+        parent.querySelector('.flex-grow-1').appendChild(replies);
+      }
+      replies.appendChild(div);
+    }
+  } else {
+    // نظر اصلی → بالای لیست
+    commentList.prepend(div);
+  }
+
+  // فعال کردن رویدادها برای کامنت جدید
+  attachCommentEvents(div);
+}
+
+// ۳. اتصال رویدادها (پاسخ، ویرایش، حذف)
+function attachCommentEvents(container = document) {
+  // پاسخ دادن به کامنت
+  container.querySelectorAll('.reply-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const commentId = this.dataset.id;
+
+      // ست کردن parent_id برای پاسخ
+      parentIdInput.value = commentId;
+
+      // فوکوس روی textarea
+      document.getElementById('comment-content').focus();
+      document.getElementById('comment-content').placeholder = 'پاسخ شما به این نظر...';
+
+      // نمایش دکمه انصراف
+      cancelReplyBtn.style.display = 'inline-block';
+    });
+  });
+
+  // انصراف از پاسخ
+  if (cancelReplyBtn) {
+    cancelReplyBtn.addEventListener('click', function() {
+      parentIdInput.value = '';
+      document.getElementById('comment-content').placeholder = 'نظر خود را اینجا بنویسید...';
+      this.style.display = 'none';
+    });
+  }
+
+  // ویرایش کامنت
+  container.querySelectorAll('.edit-comment-link').forEach(link => {
+    link.addEventListener('click', async function(e) {
+      e.preventDefault();
+      const commentId = this.dataset.id;
+      const commentDiv = document.getElementById(`comment-${commentId}`);
+      if (!commentDiv) return;
+
+      const bodyDiv = commentDiv.querySelector('.comment-body');
+      if (!bodyDiv) return;
+
+      // گرفتن متن فعلی (بدون <br>)
+      const originalText = bodyDiv.innerHTML.replace(/<br\s*\/?>/gi, '\n');
+
+      // تبدیل به textarea برای ویرایش
+      bodyDiv.innerHTML = `
+        <textarea class="form-control mb-2" rows="4">${originalText}</textarea>
+        <div class="mt-2">
+          <button class="btn btn-sm btn-success me-2 save-edit">ذخیره</button>
+          <button class="btn btn-sm btn-secondary cancel-edit">انصراف</button>
+        </div>
+      `;
+
+      const textarea = bodyDiv.querySelector('textarea');
+      const saveBtn = bodyDiv.querySelector('.save-edit');
+      const cancelBtn = bodyDiv.querySelector('.cancel-edit');
+
+      // ذخیره تغییرات
+      saveBtn.onclick = async () => {
+        const newContent = textarea.value.trim();
+        if (!newContent) {
+          alert('متن نمی‌تواند خالی باشد');
+          return;
+        }
+
+        try {
+          const response = await fetch(`/page/${pageName}/comment/${commentId}/edit`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ content: newContent })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            // برگرداندن به حالت نمایش
+            bodyDiv.innerHTML = newContent.replace(/\n/g, '<br>');
+            alert('ویرایش با موفقیت انجام شد');
+          } else {
+            alert('خطا: ' + (data.error || 'مشکلی پیش آمد'));
+            // برگرداندن به حالت قبلی در صورت خطا
+            bodyDiv.innerHTML = originalText.replace(/\n/g, '<br>');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('خطا در ارتباط با سرور');
+          bodyDiv.innerHTML = originalText.replace(/\n/g, '<br>');
+        }
+      };
+
+      // انصراف از ویرایش
+      cancelBtn.onclick = () => {
+        bodyDiv.innerHTML = originalText.replace(/\n/g, '<br>');
+      };
+    });
+  });
+
+  // حذف کامنت
+  container.querySelectorAll('.delete-comment-link').forEach(link => {
+    link.addEventListener('click', async function(e) {
+      e.preventDefault();
+      const commentId = this.dataset.id;
+      if (!confirm('آیا مطمئن هستید که می‌خواهید این نظر را حذف کنید؟')) return;
+
+      try {
+        const response = await fetch(`/page/${pageName}/comment/${commentId}/delete`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          const commentDiv = document.getElementById(`comment-${commentId}`);
+          if (commentDiv) {
+            commentDiv.remove();
+          }
+          alert('نظر با موفقیت حذف شد');
+        } else {
+          alert('خطا: ' + (data.error || 'مشکلی پیش آمد'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('خطا در ارتباط با سرور');
+      }
+    });
+  });
+}
+
+// فعال کردن رویدادها برای کامنت‌های اولیه
+attachCommentEvents(document);
+</script>
+{% endblock %}

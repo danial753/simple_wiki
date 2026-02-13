@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+    <h1>{{ title }}</h1>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="username" class="form-label">نام کاربری</label>
+            <input type="text" class="form-control" id="username" name="username" value="{{ user.username if user else '' }}" {{ 'disabled' if user else '' }} required>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">ایمیل</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ user.email if user else '' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">پسورد {{ '(جدید)' if user else '' }}</label>
+            <input type="password" class="form-control" id="password" name="password" {{ 'required' if not user else '' }}>
+        </div>
+        <div class="mb-3">
+            <label for="full_name" class="form-label">نام کامل</label>
+            <input type="text" class="form-control" id="full_name" name="full_name" value="{{ user.full_name if user else '' }}">
+        </div>
+        <div class="mb-3">
+            <label for="bio" class="form-label">بیوگرافی</label>
+            <textarea class="form-control" id="bio" name="bio" rows="4">{{ user.bio if user else '' }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="role" class="form-label">نقش</label>
+            <select class="form-select" id="role" name="role">
+                <option value="user" {% if user and user.role == 'user' %}selected{% endif %}>کاربر</option>
+                <option value="editor" {% if user and user.role == 'editor' %}selected{% endif %}>ویرایشگر</option>
+                <option value="admin" {% if user and user.role == 'admin' %}selected{% endif %}>ادمین</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">ذخیره</button>
+        <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">لغو</a>
+    </form>
+{% endblock %}

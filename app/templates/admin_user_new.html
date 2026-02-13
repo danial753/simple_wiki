@@ -1,0 +1,24 @@
+@app.route('/admin/users/new', methods=['GET','POST'])
+@login_required
+def admin_user_new():
+
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+
+        user = User(
+            username=request.form['username'],
+            email=request.form['email'],
+            full_name=request.form.get('full_name'),
+            role=request.form.get('role','user'),
+            password=generate_password_hash(request.form['password'])
+        )
+
+        db.session.add(user)
+        db.session.commit()
+
+        flash('کاربر ایجاد شد','success')
+        return redirect(url_for('admin_users'))
+
+    return render_template('admin_user_form.html', user=None)

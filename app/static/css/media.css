@@ -1,0 +1,18 @@
+/* media.css — styles for video upload UI */
+.video-drop-area{
+  border: 2px dashed rgba(100,100,140,0.12);
+  border-radius: 12px;
+  padding: 22px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.4));
+}
+.video-drop-area.drag-over{
+  border-color: rgba(99,102,241,0.6);
+  box-shadow: 0 20px 50px rgba(99,102,241,0.08);
+  transform: translateY(-4px);
+}
+.video-drop-inner{
+  text-align:center;
+}
+.upload-list .upload-item{ margin-bottom:10px; }
+.progress{ height:10px; background: rgba(0,0,0,0.05); border-radius:8px; overflow:hidden; }
+.progress-bar{ background: linear-gradient(90deg,#6f42c1,#8b5cf6); width:0%; transition: width .2s ease; }

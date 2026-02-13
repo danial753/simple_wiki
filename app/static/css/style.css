@@ -1,0 +1,389 @@
+/* ===== Dream Professional Theme (FULL - FIXED) ===== */
+
+:root{
+  --brand:#6f42c1;
+  --brand-2:#8b5cf6;
+  --brand-3:#6366f1;
+
+  --bg:#f4f7fb;
+  --bg-soft:#eef2ff;
+
+  --card:#ffffff;
+  --card-glass: rgba(255,255,255,.75);
+
+  --text:#0f172a;
+  --muted:#6c757d;
+  --border: rgba(15,23,42,.06);
+
+  --radius:16px;
+}
+
+/* ================= DARK ================= */
+
+[data-theme="dark"]{
+  --bg:#040b1a;
+  --bg-soft:#071026;
+
+  --card:#081427;
+  --card-glass: rgba(8,20,39,.72);
+
+  --text:#e6eef8;
+  --muted:#9fb0d6;
+  --border: rgba(255,255,255,.05);
+
+  --brand:#7c3aed;
+  --brand-2:#4f46e5;
+  --brand-3:#6366f1;
+
+  color-scheme: dark;
+}
+
+/* ================= BASE ================= */
+
+body{
+  font-family:'Vazirmatn', sans-serif;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(124,58,237,.06), transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(99,102,241,.05), transparent 40%),
+    var(--bg);
+  color:var(--text);
+}
+
+/* Glass Card */
+.card{
+  border:none;
+  border-radius:var(--radius);
+  background:var(--card-glass);
+  backdrop-filter: blur(14px) saturate(140%);
+  box-shadow:
+    0 10px 30px rgba(2,6,23,.05),
+    0 2px 8px rgba(2,6,23,.04);
+  transition:.25s;
+}
+
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:
+    0 18px 50px rgba(2,6,23,.08);
+}
+
+/* Buttons */
+
+.btn{
+  border-radius:12px;
+}
+
+.btn-gradient{
+  background: linear-gradient(120deg,var(--brand),var(--brand-2),var(--brand-3));
+  background-size:200% 200%;
+  color:#fff;
+  border:none;
+  animation:gradientMove 6s ease infinite;
+  box-shadow:0 12px 30px rgba(99,102,241,.18);
+}
+
+.btn-gradient:hover{
+  transform:translateY(-2px);
+}
+
+@keyframes gradientMove{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+/* ================= HERO ================= */
+
+.hero{
+  position:relative;
+  height:360px;
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+
+.hero-img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter: brightness(.65) contrast(1.05);
+  transition:transform .6s ease;
+}
+
+.hero:hover .hero-img{
+  transform:scale(1.06);
+}
+
+.hero-overlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  padding:28px;
+  background:linear-gradient(to top, rgba(2,6,23,.65), transparent);
+}
+
+.hero-title{
+  color:#fff;
+  font-size:2rem;
+  font-weight:800;
+  letter-spacing:-.5px;
+  text-shadow:0 10px 30px rgba(0,0,0,.45);
+}
+
+.hero-excerpt{
+  color:rgba(255,255,255,.85);
+}
+
+/* ================= TAGS ================= */
+
+.badge{
+  padding:8px 12px;
+  border-radius:999px;
+  background:linear-gradient(120deg,var(--brand),var(--brand-2));
+  color:#fff;
+  font-weight:500;
+}
+
+/* ================= TEAM ================= */
+
+.personnel-card{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding:10px;
+  border-radius:14px;
+  background:var(--card);
+  border:1px solid var(--border);
+  transition:.2s;
+}
+
+.personnel-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 10px 24px rgba(2,6,23,.08);
+}
+
+.person-info .fw-bold{
+  font-size:.95rem;
+}
+
+/* ================= GALLERY ================= */
+
+.gallery-grid img{
+  height:170px;
+  width:100%;
+  object-fit:cover;
+  border-radius:12px;
+  transition:.3s;
+  cursor:pointer;
+}
+
+.gallery-grid img:hover{
+  transform:scale(1.06);
+  box-shadow:0 12px 28px rgba(0,0,0,.18);
+}
+
+/* ================= CONTENT ================= */
+
+.content-body{
+  font-size:1.05rem;
+  line-height:2.1;
+}
+
+.content-body img{
+  max-width:100%;
+  border-radius:12px;
+  margin:18px 0;
+}
+
+.content-body h1,
+.content-body h2,
+.content-body h3{
+  margin-top:28px;
+  font-weight:800;
+}
+
+/* ================= VIDEO ================= */
+
+video{
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 10px 24px rgba(2,6,23,.2);
+}
+
+/* ================= COMMENTS ================= */
+
+#comments .card{
+  background:var(--card);
+}
+
+textarea.form-control{
+  border-radius:12px;
+  border:1px solid var(--border);
+}
+
+textarea.form-control:focus{
+  box-shadow:0 0 0 3px rgba(99,102,241,.15);
+  border-color:var(--brand);
+}
+
+/* ================= FAB HELP ================= */
+
+.help-fab{
+  position:fixed;
+  left:20px;
+  bottom:20px;
+  z-index:1100;
+
+  width:64px;
+  height:64px;
+  border-radius:20px;
+  border:none;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  color:#fff;
+
+  cursor:pointer;
+
+  box-shadow:
+    0 20px 40px rgba(99,102,241,.25),
+    0 8px 20px rgba(2,6,23,.15);
+
+  transition:.25s;
+}
+
+.help-fab:hover{
+  transform:translateY(-6px) scale(1.05);
+}
+
+.help-fab .fab-badge{
+  position:absolute;
+  right:-6px;
+  top:-6px;
+
+  width:26px;
+  height:26px;
+  border-radius:50%;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-weight:700;
+  font-size:12px;
+
+  background:#fff;
+  color:var(--brand);
+
+  box-shadow:0 6px 18px rgba(2,6,23,.2);
+}
+
+/* ================= FLOATING ORBS ================= */
+
+#dream-help-orbs{
+  position:fixed;
+  left:-40px;
+  bottom:-40px;
+  width:320px;
+  height:320px;
+  z-index:1050;
+  pointer-events:none;
+}
+
+.orb{
+  position:absolute;
+  border-radius:50%;
+  filter: blur(30px);
+  opacity:.65;
+  animation:float 8s ease-in-out infinite;
+}
+
+.orb-1{
+  width:170px;height:170px;
+  background:linear-gradient(135deg,#ff80bf,#7c3aed);
+}
+
+.orb-2{
+  width:120px;height:120px;
+  left:140px; bottom:40px;
+  background:linear-gradient(135deg,#60a5fa,#7dd3fc);
+  animation-delay:2s;
+}
+
+.orb-3{
+  width:70px;height:70px;
+  left:220px; bottom:120px;
+  background:linear-gradient(135deg,#fde68a,#fb923c);
+  animation-delay:4s;
+}
+
+@keyframes float{
+  0%{ transform:translateY(0); }
+  50%{ transform:translateY(-20px); }
+  100%{ transform:translateY(0); }
+}
+
+/* ================= OFFCANVAS ================= */
+
+.offcanvas{
+  --bs-offcanvas-width:420px;
+  background:var(--card-glass);
+  backdrop-filter: blur(18px);
+}
+
+/* ================= TOUR ================= */
+
+.tour-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(2,6,23,.65);
+  z-index:1200;
+}
+
+.tour-tooltip{
+  position:fixed;
+  z-index:1210;
+  max-width:360px;
+
+  padding:14px;
+  border-radius:14px;
+
+  background:var(--card);
+  box-shadow:0 20px 40px rgba(2,6,23,.4);
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width:720px){
+
+  .hero{
+    height:240px;
+  }
+
+  .hero-title{
+    font-size:1.4rem;
+  }
+
+  .gallery-grid img{
+    height:130px;
+  }
+
+  #dream-help-orbs{
+    display:none;
+  }
+
+  .help-fab{
+    left:12px;
+    bottom:14px;
+    width:54px;
+    height:54px;
+  }
+
+  .offcanvas{
+    --bs-offcanvas-width:100%;
+  }
+}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}ثبت‌نام{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow">
+      <div class="card-body p-4">
+        <h3 class="mb-4">ثبت‌نام</h3>
+
+        <form method="POST" action="{{ url_for('register') }}">
+          <div class="mb-3">
+            <label class="form-label">نام کاربری</label>
+            <input name="username" class="form-control" required autofocus value="{{ request.form.get('username', '') }}">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">ایمیل</label>
+            <input name="email" type="email" class="form-control" required value="{{ request.form.get('email', '') }}">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">رمز عبور</label>
+            <input name="password" type="password" class="form-control" required aria-describedby="pwdHelp">
+            <div id="pwdHelp" class="form-text small text-muted">رمز عبور را امن و حداقل 6 کاراکتر انتخاب کنید.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">نام کامل</label>
+            <input name="full_name" class="form-control" value="{{ request.form.get('full_name', '') }}">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">بیو</label>
+            <textarea name="bio" class="form-control" rows="3">{{ request.form.get('bio', '') }}</textarea>
+          </div>
+
+          <div class="d-grid">
+            <button class="btn btn-success">ثبت‌نام</button>
+          </div>
+        </form>
+
+        <div class="mt-3 text-center small">
+          قبلا ثبت‌نام کرده‌اید؟ <a href="{{ url_for('login') }}">وارد شوید</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
