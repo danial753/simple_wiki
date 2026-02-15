@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %}ساده‌ویکی{% endblock %}</title>
+  <title>{% block title %}Azin{% endblock %}</title>
 
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- Font Vazirmatn (هماهنگ با صفحات قبل) -->
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Bootstrap RTL -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
@@ -14,20 +14,269 @@
   <!-- Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
-  <!-- Theme CSS -->
+  <!-- AOS (برای انیمیشن‌های اسکرول) -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+  <!-- Theme variables & global styles -->
+  <style>
+    :root {
+      --primary: #0d6efd;
+      --primary-dark: #0a58ca;
+      --primary-soft: rgba(13, 110, 253, 0.1);
+      --light-bg: #f8f9fc;
+      --card-bg: #ffffff;
+      --text-dark: #1f2937;
+      --text-muted: #6c757d;
+      --glass-border: rgba(15, 23, 42, 0.08);
+      --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
+      --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+      --shadow-lg: 0 16px 32px rgba(0,0,0,0.12);
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --transition: all 0.25s ease;
+    }
+
+    body {
+      font-family: 'Vazirmatn', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--light-bg);
+      color: var(--text-dark);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* هدر با افکت شیشه‌ای */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--glass-border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .brand:hover {
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .logo {
+      height: 40px;
+      width: auto;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+    }
+
+    /* نوار جستجو */
+    .search-wrap {
+      width: 420px;
+      max-width: 36vw;
+    }
+    .search-input {
+      border-radius: 10px 0 0 10px;
+      border: none;
+      background: #f3f6ff;
+      padding: 0.6rem 1rem;
+      transition: var(--transition);
+      border: 1px solid transparent;
+    }
+    .search-input:focus {
+      background: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+      outline: none;
+    }
+    .search-wrap .btn {
+      border-radius: 0 10px 10px 0;
+      padding: 0.6rem 1.2rem;
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      transition: var(--transition);
+    }
+    .search-wrap .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* آواتار */
+    .avatar-sm {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #fff;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .avatar-sm:hover {
+      transform: scale(1.05);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-soft);
+    }
+
+    .dropdown-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: var(--text-dark);
+      font-weight: 500;
+      padding: 0.25rem 0.5rem;
+      border-radius: 30px;
+      transition: var(--transition);
+    }
+    .dropdown-toggle:hover {
+      background: var(--primary-soft);
+    }
+
+    .dropdown-menu {
+      border: none;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .dropdown-item {
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+    .dropdown-item:hover {
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+      transform: translateX(-4px);
+    }
+    .dropdown-item i {
+      color: var(--primary);
+    }
+
+    /* دکمه‌های عمومی */
+    .btn-outline-secondary, .btn-outline-primary, .btn-primary {
+      border-radius: 30px;
+      border-width: 2px;
+      font-weight: 500;
+      padding: 0.4rem 1.2rem;
+      transition: var(--transition);
+    }
+    .btn-outline-secondary:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+    }
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(13, 110, 253, 0.4);
+    }
+
+    /* فوتر */
+    footer.site-footer {
+      margin-top: 60px;
+      border-top: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(4px);
+      padding: 1.5rem 0;
+      color: var(--text-muted);
+    }
+
+    /* کارت‌ها */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: none;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* انیمیشن hover scale */
+    .hover-scale {
+      transition: var(--transition);
+    }
+    .hover-scale:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: var(--shadow-md) !important;
+    }
+
+    /* پیام‌ها */
+    .alert {
+      border-radius: var(--radius-md);
+      border: none;
+      box-shadow: var(--shadow-sm);
+      background: white;
+      border-right: 4px solid;
+    }
+    .alert-success { border-right-color: #28a745; }
+    .alert-danger { border-right-color: #dc3545; }
+    .alert-info { border-right-color: var(--primary); }
+
+    /* responsive */
+    @media (max-width: 992px) {
+      .search-wrap { width: 280px; }
+    }
+    @media (max-width: 768px) {
+      .brand span { display: none; }
+      .search-wrap { display: none; }
+    }
+  </style>
+
+  <!-- Theme CSS (در صورت وجود) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
 
   {% block extra_head %}{% endblock %}
 </head>
 <body>
-  <header class="site-header shadow-sm">
+  {# ماکرو برای مدیریت ایمن url_for (مشابه نسخه قبلی) #}
+  {% macro safe_url_for(endpoint, filename=None) %}
+    {% if endpoint_exists(endpoint) %}
+      {{ url_for(endpoint, filename=filename) }}
+    {% elif endpoint == 'wiki.uploaded_file' and filename %}
+      /uploads/{{ filename }}
+    {% else %}
+      #
+    {% endif %}
+  {% endmacro %}
+
+  {# تعریف متغیرهای کمکی برای url‌ها (اختیاری) #}
+  {% set home_url = url_for('wiki.index') if endpoint_exists('wiki.index') else '/' %}
+  {% set discover_url = url_for('wiki.discover') if endpoint_exists('wiki.discover') else '#' %}
+  {% set profile_url = url_for('profile') if endpoint_exists('profile') else '#' %}
+  {% set admin_users_url = url_for('admin_users') if endpoint_exists('admin_users') else '#' %}
+  {% set logout_url = url_for('logout') if endpoint_exists('logout') else '#' %}
+  {% set login_url = url_for('login') if endpoint_exists('login') else '#' %}
+
+  <header class="site-header" data-aos="fade-down">
     <div class="container d-flex align-items-center justify-content-between py-2">
-      <a class="brand d-flex align-items-center text-decoration-none" href="{{ url_for('wiki.index') }}">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="logo" class="logo me-2" onerror="this.style.display='none'">
+      <a class="brand" href="{{ home_url }}">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="logo" class="logo"
+             onerror="this.style.display='none'">
         <span>ساده‌ویکی</span>
       </a>
 
-      <form id="global-search" class="d-flex ms-auto me-3" action="{{ url_for('wiki.discover') }}" method="GET" role="search">
+      <form id="global-search" class="d-flex ms-auto me-3" action="{{ discover_url }}" method="GET" role="search">
         <div class="input-group search-wrap">
           <input name="q" value="{{ request.args.get('q','') }}" class="form-control search-input" placeholder="جست‌وجو در صفحات و تگ‌ها..." aria-label="Search">
           <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
@@ -35,25 +284,28 @@
       </form>
 
       <nav class="d-flex gap-2 align-items-center">
-        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('wiki.discover') }}">کاوش</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ discover_url }}">کاوش</a>
         {% if current_user.is_authenticated %}
           <a class="btn btn-primary btn-sm" href="{{ url_for('wiki.edit_page', page_slug='new') }}"><i class="bi bi-plus-lg"></i> صفحه جدید</a>
           <div class="dropdown">
-            <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-              <img src="{{ url_for('wiki.uploaded_file', filename=current_user.avatar) }}" class="avatar-sm me-2" alt="avatar">
-              <span class="muted small">{{ current_user.username }}</span>
+            <a class="dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+              {% set avatar_path = current_user.avatar if current_user.avatar else 'default_avatar.png' %}
+              <img src="{{ safe_url_for('wiki.uploaded_file', filename=avatar_path) }}"
+                   class="avatar-sm" alt="avatar"
+                   onerror="this.onerror=null; this.src='{{ url_for('static', filename='default_avatar.png') }}'">
+              <span class="small fw-semibold">{{ current_user.username }}</span>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="bi bi-person me-2"></i>پروفایل</a></li>
+              <li><a class="dropdown-item" href="{{ profile_url }}"><i class="bi bi-person me-2"></i>پروفایل</a></li>
               {% if current_user.role == 'admin' %}
-                <li><a class="dropdown-item" href="{{ url_for('admin_users') }}"><i class="bi bi-people me-2"></i>مدیریت کاربران</a></li>
+                <li><a class="dropdown-item" href="{{ admin_users_url }}"><i class="bi bi-people me-2"></i>مدیریت کاربران</a></li>
               {% endif %}
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i>خروج</a></li>
+              <li><a class="dropdown-item text-danger" href="{{ logout_url }}"><i class="bi bi-box-arrow-right me-2"></i>خروج</a></li>
             </ul>
           </div>
         {% else %}
-          <a class="btn btn-outline-primary btn-sm" href="{{ url_for('login') }}">ورود</a>
+          <a class="btn btn-outline-primary btn-sm" href="{{ login_url }}">ورود</a>
         {% endif %}
       </nav>
     </div>
@@ -62,9 +314,10 @@
   <main class="container my-4">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        <div class="mb-3">
+        <div class="mb-4">
           {% for cat, msg in messages %}
-            <div class="alert alert-{{ 'danger' if cat=='danger' else ('warning' if cat=='warning' else ('success' if cat=='success' else 'info')) }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{{ 'danger' if cat=='danger' else ('warning' if cat=='warning' else ('success' if cat=='success' else 'info')) }} alert-dismissible fade show shadow-sm" role="alert" data-aos="fade-in">
+              <i class="bi bi-{{ 'exclamation-triangle' if cat=='danger' else 'exclamation-circle' if cat=='warning' else 'check-circle' if cat=='success' else 'info-circle' }} me-2"></i>
               {{ msg }}
               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
             </div>
@@ -76,14 +329,24 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="site-footer text-center py-3">
+  <footer class="site-footer text-center">
     <div class="container">
-      <small class="text-muted">© Simple Wiki — ساخته‌شده با ♥</small>
+      <small class="text-muted">© Simple Wiki — ساخته‌شده با <i class="bi bi-heart-fill text-danger"></i> در ایران</small>
     </div>
   </footer>
 
   <!-- Bootstrap & dependencies -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- AOS برای انیمیشن اسکرول -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    AOS.init({
+      duration: 800,
+      once: true,
+      easing: 'ease-in-out'
+    });
+  </script>
 
   <!-- Main JS -->
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>

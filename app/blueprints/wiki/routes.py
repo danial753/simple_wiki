@@ -12,6 +12,20 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
+from slugify import slugify
+
+from datetime import datetime, timezone
+from typing import Dict, Any
+import logging
+logger = logging.getLogger(__name__)
+
+
+# اگر تابع allowed_file تعریف نشده، این را اضافه کن (یا از ps بیاور)
+def allowed_file(filename: str) -> bool:
+    """چک می‌کند آیا پسوند فایل مجاز است یا نه"""
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf', 'mp4', 'mov', 'webm'}
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
 # try to import extensions & models; fall back gracefully if not present
 try:
@@ -261,141 +275,37 @@ def index():
     return render_template('index.html', pages=pages_out, all_tags=all_tags, search_query=search)
 
 
-@wiki_bp.route('/page/<path:page_name>', endpoint='view_page')
-def view_page(page_name: str):
-    """
-    Render a page from file (and DB meta if available).
-    """
-    path = _page_file_path(page_name)
-    if not os.path.exists(path):
-        flash('صفحه یافت نشد', 'warning')
-        return redirect(url_for('wiki.index'))
-
-    parsed = {}
-    if ps and hasattr(ps, 'parse_page_meta_and_body'):
-        try:
-            parsed = ps.parse_page_meta_and_body(path) or {}
-        except Exception:
-            current_app.logger.exception("ps.parse_page_meta_and_body failed; fallback to manual read")
-
-    content = parsed.get('body', '')
-    if content == '':
-        try:
-            with open(path, 'r', encoding='utf-8') as fh:
-                content = fh.read()
-        except Exception:
-            content = ''
-
-    title = page_name.replace('-', ' ').title()
-    subtitle = ''
-    excerpt = ''
-    tags = extract_tags_from_page(path)
-    feature_image = ''
-    gallery: List[str] = []
-    videos: List[str] = []
-    personnel: List[dict] = []
-
-    if Page is not None:
-        try:
-            p = Page.query.filter_by(slug=page_name).first()  # type: ignore
-            if p:
-                title = p.title or title
-                subtitle = p.subtitle or subtitle
-                excerpt = p.excerpt or excerpt
-                tags = [t.strip() for t in (p.tags or "").split(',') if t.strip()] or tags
-                feature_image = p.feature_image or feature_image
-                try:
-                    gallery = json.loads(p.gallery) if p.gallery else gallery
-                except Exception:
-                    gallery = gallery
-                try:
-                    videos = json.loads(p.videos) if p.videos else videos
-                except Exception:
-                    videos = videos
-                try:
-                    personnel = json.loads(p.personnel) if p.personnel else personnel
-                except Exception:
-                    personnel = personnel
-        except Exception:
-            current_app.logger.exception("view_page: DB meta overlay failed")
-
-    root_comments = []
-    if Comment is not None:
-        try:
-            root_comments = Comment.query.filter_by(page=page_name, parent_id=None).order_by(Comment.created_at.asc()).all()  # type: ignore
-            for c in root_comments:
-                _ = c.user
-        except Exception:
-            current_app.logger.exception("view_page: loading comments failed")
-
-    paths = _paths()
-    gallery_urls: List[str] = []
-    for g in gallery:
-        if not g:
-            continue
-        full_path = str(paths['UPLOADS_DIR'] / g)
-        if os.path.exists(full_path):
-            gallery_urls.append(url_for('wiki.uploaded_file', filename=g))
-        else:
-            current_app.logger.warning("Gallery image not found: %s", g)
-
-    video_urls: List[str] = []
-    for v in videos:
-        if not v:
-            continue
-        full_path = str(paths['VIDEO_FOLDER'] / v)
-        if os.path.exists(full_path):
-            video_urls.append(url_for('wiki.stream_video', filename=v))
-        else:
-            current_app.logger.warning("Video not found: %s", v)
-
-    feature_image_url = url_for('wiki.uploaded_file', filename=feature_image) if feature_image else ''
-
-    return render_template(
-        'page.html',
-        page_name=page_name,
-        content=content,
-        tags=tags,
-        root_comments=root_comments,
-        subtitle=subtitle,
-        gallery=gallery,
-        gallery_urls=gallery_urls,
-        videos=videos,
-        video_urls=video_urls,
-        personnel=personnel,
-        page_meta=None,
-        title=title,
-        excerpt=excerpt,
-        feature_image=feature_image,
-        feature_image_url=feature_image_url
-    )
+def allowed_file(filename: str) -> bool:
+    """چک می‌کند آیا پسوند فایل مجاز است یا نه"""
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf', 'mp4', 'mov', 'webm'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
 
-# -------------------- Edit page (GET / POST) --------------------
-# Note: templates sometimes call url_for('edit_page') without args.
-# We'll ensure an alias exists later (in create_app or below).
 @wiki_bp.route('/edit/new', methods=['GET', 'POST'], endpoint='edit_page_new')
 @wiki_bp.route('/edit/<path:page_slug>', methods=['GET', 'POST'], endpoint='edit_page')
 @login_required
 def edit_page(page_slug: Optional[str] = None):
-    role = getattr(current_user, 'role', 'user') if current_user else 'user'
+    role = getattr(current_user, 'role', 'user') if current_user.is_authenticated else 'user'
     if role not in ['admin', 'editor']:
         flash('دسترسی ندارید', 'danger')
         return redirect(url_for('wiki.index'))
 
-    is_new = page_slug is None
-    content = ""
+    is_new = page_slug is None or page_slug == 'new'
+    page = None
+
+    # مقادیر پیش‌فرض
     title = ""
     subtitle = ""
+    content = ""
     tags = ""
     feature_image = None
     gallery = []
     videos = []
     personnel = []
-    excerpt_field = ""
+    excerpt = ""
 
-    # load existing file if editing
-    if page_slug:
+    # بارگذاری صفحه موجود (اگر ویرایش باشد)
+    if not is_new:
         path = _page_file_path(page_slug)
         if os.path.exists(path):
             try:
@@ -403,188 +313,188 @@ def edit_page(page_slug: Optional[str] = None):
                     parsed = ps.parse_page_meta_and_body(path) or {}
                     content = parsed.get('body', '')
                     meta = parsed.get('meta_fields', {})
-                    tags = meta.get('tags', tags)
+                    title = meta.get('title', title)
                     subtitle = meta.get('subtitle', subtitle)
-                    excerpt_field = meta.get('excerpt', excerpt_field)
+                    excerpt = meta.get('excerpt', excerpt)
+                    tags = meta.get('tags', tags)
                     gallery = meta.get('gallery', gallery)
                     videos = meta.get('videos', videos)
                     personnel = meta.get('personnel', personnel)
                 else:
-                    txt = Path(path).read_text(encoding='utf-8') if os.path.exists(path) else ''
-                    m = re.match(r'^(<!--.*?-->)\s*(.*)', txt, re.S)
+                    with open(path, 'r', encoding='utf-8') as f:
+                        txt = f.read()
+                    m = re.match(r'^(<!--.*?-->)\s*(.*)', txt, re.DOTALL)
                     if m:
                         meta_txt = m.group(1)
                         content = m.group(2).strip()
-                        tm = re.search(r'<!--TAGS:(.*?)-->', meta_txt, re.S)
-                        if tm: tags = tm.group(1).strip()
-                        sm = re.search(r'<!--SUBTITLE:(.*?)-->', meta_txt, re.S)
-                        if sm: subtitle = sm.group(1).strip()
-                        exm = re.search(r'<!--EXCERPT:(.*?)-->', meta_txt, re.S)
-                        if exm: excerpt_field = exm.group(1).strip()
-                        gm = re.search(r'<!--GALLERY:(.*?)-->', meta_txt, re.S)
-                        if gm:
-                            try:
-                                gallery = json.loads(gm.group(1).strip())
-                            except Exception:
-                                gallery = []
-                        vm = re.search(r'<!--VIDEOS:(.*?)-->', meta_txt, re.S)
-                        if vm:
-                            try:
-                                videos = json.loads(vm.group(1).strip())
-                            except Exception:
-                                videos = []
-                        pm = re.search(r'<!--PERSONNEL:(.*?)-->', meta_txt, re.S)
-                        if pm:
-                            try:
-                                personnel = json.loads(pm.group(1).strip())
-                            except Exception:
-                                personnel = []
+                        for key in ['TAGS', 'SUBTITLE', 'EXCERPT', 'GALLERY', 'VIDEOS', 'PERSONNEL']:
+                            mm = re.search(rf'<!--{key}:(.*?)-->', meta_txt, re.DOTALL)
+                            if mm:
+                                val = mm.group(1).strip()
+                                if key == 'TAGS':
+                                    tags = val
+                                elif key == 'SUBTITLE':
+                                    subtitle = val
+                                elif key == 'EXCERPT':
+                                    excerpt = val
+                                elif key == 'GALLERY':
+                                    try: gallery = json.loads(val)
+                                    except: gallery = []
+                                elif key == 'VIDEOS':
+                                    try: videos = json.loads(val)
+                                    except: videos = []
+                                elif key == 'PERSONNEL':
+                                    try: personnel = json.loads(val)
+                                    except: personnel = []
                     else:
                         content = txt
+
                 m2 = re.search(r'<h[1-6].*?>(.*?)</h[1-6]>', content, re.I)
                 title = m2.group(1).strip() if m2 else title
             except Exception:
-                current_app.logger.exception("Failed to read existing page file")
+                current_app.logger.exception("خطا در خواندن فایل صفحه موجود")
+
+        # Overlay با دیتابیس (اولویت بالاتر)
         if Page is not None:
             try:
-                p = Page.query.filter_by(slug=page_slug).first()  # type: ignore
+                p = Page.query.filter_by(slug=page_slug).first()
                 if p:
+                    page = p
                     title = p.title or title
                     subtitle = p.subtitle or subtitle
-                    excerpt_field = p.excerpt or excerpt_field
+                    excerpt = p.excerpt or excerpt
                     tags = p.tags or tags
                     feature_image = p.feature_image or feature_image
-                    try:
-                        gallery = json.loads(p.gallery) if getattr(p, 'gallery', None) else gallery
-                    except Exception:
-                        gallery = gallery
-                    try:
-                        videos = json.loads(p.videos) if getattr(p, 'videos', None) else videos
-                    except Exception:
-                        videos = videos
-                    try:
-                        personnel = json.loads(p.personnel) if getattr(p, 'personnel', None) else personnel
-                    except Exception:
-                        personnel = personnel
+                    gallery = p.get_gallery() or gallery
+                    videos = p.get_videos() or videos
+                    personnel = p.get_personnel() or personnel
+                    content = p.content or content
             except Exception:
-                current_app.logger.exception("Overlay DB metadata failed")
+                current_app.logger.exception("خطا در لود متادیتا از دیتابیس")
 
-    # handle POST (save)
+    # پردازش POST (ذخیره)
     if request.method == 'POST':
         try:
             title = request.form.get('page_title', title or 'بدون عنوان').strip()
-            subtitle = request.form.get('subtitle', subtitle or '').strip()
-            excerpt_field = request.form.get('excerpt', excerpt_field or '').strip()
-            tags = request.form.get('tags', tags or '').strip()
-            body = request.form.get('content', content or '').strip()
-            personnel_json = request.form.get('personnel_json', '')
+            subtitle = request.form.get('subtitle', subtitle).strip()
+            excerpt = request.form.get('excerpt', excerpt).strip()
+            tags = request.form.get('tags', tags).strip()
+            content = request.form.get('content', content).strip()
 
+            # ===== دریافت لیست فایل‌های قدیمی از فرم =====
+            existing_gallery = []
+            existing_videos = []
+
+            if request.form.get('existing_gallery'):
+                try:
+                    existing_gallery = json.loads(request.form.get('existing_gallery'))
+                except json.JSONDecodeError:
+                    existing_gallery = []
+
+            if request.form.get('existing_videos'):
+                try:
+                    existing_videos = json.loads(request.form.get('existing_videos'))
+                except json.JSONDecodeError:
+                    existing_videos = []
+            # ============================================
+
+            # پردازش personnel
+            personnel_raw = request.form.get('personnel', '[]')
             try:
-                from slugify import slugify as _slugify  # type: ignore
-                slug = _slugify(title, lowercase=True, allow_unicode=True) or uuid.uuid4().hex
-            except Exception:
-                slug = uuid.uuid4().hex
+                personnel = json.loads(personnel_raw)
+                personnel = [p for p in personnel if isinstance(p, dict) and p.get('name')]
+            except json.JSONDecodeError:
+                personnel = []
+                current_app.logger.warning("JSON پرسنل نامعتبر بود")
 
-            file_path = _page_file_path(slug)
+            # slug جدید
+            new_slug = slugify(title, lowercase=True, allow_unicode=True) or uuid.uuid4().hex[:12]
 
-            # feature image upload
-            fimg = request.files.get('feature_image')
-            if fimg and fimg.filename and _allowed_file(fimg.filename):
-                try:
-                    if ps and hasattr(ps, 'process_image_and_save'):
-                        res = ps.process_image_and_save(fimg, fimg.filename)
-                        feature_image = res.get('filename', feature_image)
-                        if res.get('url') and res['url'] not in body:
-                            body = f'<img src="{res["url"]}" alt="feature" class="img-fluid mb-3">\n' + body
-                    else:
-                        outname = _unique_filename(fimg.filename)
-                        dest = _paths()['UPLOADS_DIR'] / outname
-                        fimg.save(str(dest))
-                        feature_image = outname
-                        body = f'<img src="{url_for("wiki.uploaded_file", filename=feature_image)}" alt="feature" class="img-fluid mb-3">\n' + body
-                except Exception:
-                    current_app.logger.exception("feature image save failed")
+            # ===== پردازش تصویر شاخص =====
+            feature_image = None
+            if 'feature_image' in request.files:
+                file = request.files['feature_image']
+                if file and file.filename and allowed_file(file.filename):
+                    ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+                    unique_name = f"{uuid.uuid4().hex}.{ext}"
+                    dest = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_name)
+                    file.save(dest)
+                    feature_image = unique_name
+            # اگر فایل جدیدی آپلود نشده و صفحه قبلاً تصویر داشته، مقدار قبلی را حفظ کن
+            if not feature_image and not is_new and page:
+                feature_image = page.feature_image
 
-            # gallery uploads
-            gallery = request.form.getlist('existing_gallery') or gallery
-            if 'gallery_images' in request.files:
-                files = request.files.getlist('gallery_images')
-                for fi in files:
-                    if fi and fi.filename and _allowed_file(fi.filename):
-                        try:
-                            if ps and hasattr(ps, 'process_image_and_save'):
-                                r = ps.process_image_and_save(fi, fi.filename)
-                                if r.get('filename') and r['filename'] not in gallery:
-                                    gallery.append(r['filename'])
-                            else:
-                                outname = _unique_filename(fi.filename)
-                                fi.save(str(_paths()['UPLOADS_DIR'] / outname))
-                                if outname not in gallery:
-                                    gallery.append(outname)
-                        except Exception:
-                            current_app.logger.exception("gallery image save failed")
+            # ===== پردازش گالری تصاویر =====
+            new_gallery = []
+            if 'gallery_images[]' in request.files:
+                files = request.files.getlist('gallery_images[]')
+                for file in files:
+                    if file and file.filename and allowed_file(file.filename):
+                        ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+                        unique_name = f"{uuid.uuid4().hex}.{ext}"
+                        dest = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_name)
+                        file.save(dest)
+                        new_gallery.append(unique_name)
 
-            # videos
-            videos = request.form.getlist('existing_videos') or videos
-            if 'videos' in request.files:
-                files = request.files.getlist('videos')
-                for fi in files:
-                    if fi and fi.filename and _allowed_video(fi.filename):
-                        outname = _unique_filename(fi.filename)
-                        dest = _paths()['VIDEO_FOLDER'] / outname
-                        try:
-                            fi.save(str(dest))
-                            if outname not in videos:
-                                videos.append(outname)
-                        except Exception:
-                            current_app.logger.exception("video save failed")
+            # ترکیب لیست قدیمی و جدید
+            gallery = existing_gallery + new_gallery
 
-            # personnel
-            if personnel_json:
-                try:
-                    personnel = json.loads(personnel_json)
-                except Exception:
-                    personnel = []
+            # ===== پردازش ویدیوها =====
+            new_videos = []
+            if 'videos[]' in request.files:
+                files = request.files.getlist('videos[]')
+                for file in files:
+                    if file and file.filename and _allowed_video(file.filename):
+                        ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+                        unique_name = f"{uuid.uuid4().hex}.{ext}"
+                        dest = os.path.join(_paths()['VIDEO_FOLDER'], unique_name)
+                        file.save(dest)
+                        new_videos.append(unique_name)
 
-            # normalize body/title
-            if title and body.startswith(f'<h1>{title}</h1>'):
-                body = body[len(f'<h1>{title}</h1>'):].strip()
-            body = f'<h1>{title}</h1>\n' + body if title else body
+            videos = existing_videos + new_videos
 
+            # ===== ساخت متا برای فایل (اختیاری) =====
             meta_parts = [
                 f"<!--TAGS:{tags}-->",
                 f"<!--SUBTITLE:{subtitle}-->",
-                f"<!--EXCERPT:{excerpt_field}-->",
+                f"<!--EXCERPT:{excerpt}-->",
                 f"<!--GALLERY:{json.dumps(gallery, ensure_ascii=False)}-->",
                 f"<!--VIDEOS:{json.dumps(videos, ensure_ascii=False)}-->",
                 f"<!--PERSONNEL:{json.dumps(personnel, ensure_ascii=False)}-->"
             ]
             meta = "\n".join(meta_parts) + "\n"
 
-            # write atomically to avoid partial writes
+            # مسیر فایل جدید
+            file_path = _page_file_path(new_slug)
+
+            # نوشتن فایل به صورت اتمیک
             tmp_path = Path(file_path).with_suffix('.tmp')
-            tmp_path.write_text(meta + body, encoding='utf-8')
-            Path(file_path).write_text('', encoding='utf-8')  # ensure exists on Windows
+            tmp_path.write_text(meta + content, encoding='utf-8')
             tmp_path.replace(Path(file_path))
 
-            # attempt DB metadata upsert
-            try:
-                if ps and hasattr(ps, 'ensure_page_metadata'):
-                    ps.ensure_page_metadata(slug, title, subtitle, excerpt_field, tags, feature_image, gallery, videos, personnel)
-                elif Page is not None:
-                    p = Page.query.filter_by(slug=slug).first()  # type: ignore
+            # ===== ذخیره در دیتابیس =====
+            if Page is not None:
+                try:
+                    p = Page.query.filter_by(slug=new_slug).first()
                     if not p:
-                        p = Page(slug=slug, title=title, subtitle=subtitle, excerpt=excerpt_field, tags=tags, feature_image=feature_image, gallery=json.dumps(gallery, ensure_ascii=False), videos=json.dumps(videos, ensure_ascii=False), personnel=json.dumps(personnel, ensure_ascii=False))  # type: ignore
-                        db.session.add(p)  # type: ignore
-                    else:
-                        p.title = title; p.subtitle = subtitle; p.excerpt = excerpt_field; p.tags = tags; p.feature_image = feature_image
-                        p.gallery = json.dumps(gallery, ensure_ascii=False); p.videos = json.dumps(videos, ensure_ascii=False); p.personnel = json.dumps(personnel, ensure_ascii=False)
-                    db.session.commit()  # type: ignore
-            except Exception:
-                current_app.logger.exception("DB metadata upsert failed")
+                        p = Page(slug=new_slug)
+                        db.session.add(p)
+                    p.title = title
+                    p.subtitle = subtitle
+                    p.excerpt = excerpt
+                    p.tags = tags
+                    p.feature_image = feature_image
+                    p.gallery = json.dumps(gallery, ensure_ascii=False) if gallery else None
+                    p.videos = json.dumps(videos, ensure_ascii=False) if videos else None
+                    p.personnel = json.dumps(personnel, ensure_ascii=False) if personnel else None
+                    p.content = content
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                    current_app.logger.exception("خطا در ذخیره متادیتا در دیتابیس")
 
-            # delete old page if slug changed
-            if page_slug and page_slug != slug:
+            # حذف فایل/رکورد قدیمی اگر slug تغییر کرده
+            if not is_new and page_slug != new_slug:
                 old_path = _page_file_path(page_slug)
                 try:
                     if os.path.exists(old_path):
@@ -593,33 +503,39 @@ def edit_page(page_slug: Optional[str] = None):
                     pass
                 try:
                     if Page is not None:
-                        old_p = Page.query.filter_by(slug=page_slug).first()  # type: ignore
+                        old_p = Page.query.filter_by(slug=page_slug).first()
                         if old_p:
-                            db.session.delete(old_p)  # type: ignore
-                            db.session.commit()  # type: ignore
+                            db.session.delete(old_p)
+                            db.session.commit()
                 except Exception:
                     pass
 
-            flash('صفحه ذخیره شد', 'success')
-            return redirect(url_for('wiki.view_page', page_name=slug))
-        except Exception:
-            current_app.logger.exception("Save failed")
-            try:
-                if db is not None:
-                    db.session.rollback()
-            except Exception:
-                pass
-            flash('خطا در ذخیره', 'danger')
+            flash('صفحه با موفقیت ذخیره شد', 'success')
+            return redirect(url_for('wiki.view_page', page_name=new_slug))
 
-    gallery_urls = [url_for('wiki.uploaded_file', filename=g) for g in gallery]
-    video_urls = [url_for('wiki.stream_video', filename=v) for v in videos]
-    feature_image_url = url_for('wiki.uploaded_file', filename=feature_image) if feature_image else None
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.exception("خطا در ذخیره صفحه")
+            flash(f'خطا در ذخیره: {str(e)}', 'danger')
+
+    # آماده‌سازی برای GET یا خطا در POST
+    gallery_urls = []
+    for g in gallery:
+        if g:
+            gallery_urls.append(url_for('auth.uploads_file', filename=g))
+
+    video_urls = []
+    for v in videos:
+        if v:
+            video_urls.append(url_for('wiki.stream_video', filename=v))
+
+    feature_image_url = url_for('auth.uploads_file', filename=feature_image) if feature_image else None
 
     return render_template(
         'edit.html',
         is_new=is_new,
         page_slug=page_slug,
-        page_title=title,
+        title=title,
         subtitle=subtitle,
         content=content,
         tags=tags,
@@ -630,9 +546,8 @@ def edit_page(page_slug: Optional[str] = None):
         videos=videos,
         video_urls=video_urls,
         personnel=personnel,
-        excerpt=excerpt_field
+        excerpt=excerpt
     )
-
 
 # -------------------- API: save / delete --------------------
 @wiki_bp.route('/api/page/save', methods=['POST'], endpoint='api_page_save')
@@ -1111,117 +1026,354 @@ def build_comment_html(comment_obj) -> str:
     return html
 
 
-@wiki_bp.route('/api/comments/<page_name>', endpoint='api_comments')
+@wiki_bp.route('/api/comments/<path:page_name>', endpoint='api_comments')
 def api_comments(page_name: str):
+    """
+    بازگشت لیست کامنت‌ها به صورت درختی (root + children) برای یک صفحه خاص.
+    - فقط کامنت‌های حذف‌نشده (deleted=False) را برمی‌گرداند
+    - رابطه user را لود می‌کند تا username و avatar در دسترس باشد
+    - ساختار بازگشتی مناسب برای نمایش درختی در فرانت‌اند
+    - مدیریت خطا با لاگ و پاسخ 500 امن
+    """
     if Comment is None:
-        return jsonify({'success': True, 'comments': []})
+        return jsonify({
+            'success': True,
+            'comments': [],
+            'message': 'سیستم کامنت فعال نیست'
+        }), 200
+
     try:
-        comments = Comment.query.filter_by(page=page_name).order_by(Comment.created_at.asc()).all()  # type: ignore
-        def to_dict(c):
+        # لود تمام کامنت‌های صفحه (root + replies)
+        comments = Comment.query.filter_by(
+            page=page_name
+        ).order_by(
+            Comment.created_at.asc()
+        ).all()
+
+        # ساخت دیکشنری id → کامنت برای دسترسی سریع به parent
+        comment_map = {c.id: c for c in comments}
+
+        # ساخت ساختار درختی
+        roots = []
+        for comment in comments:
+            # لود رابطه user (برای جلوگیری از lazy load در to_dict)
+            _ = comment.user
+
+            # فقط rootها را جمع می‌کنیم
+            if comment.parent_id is None:
+                roots.append(comment)
+
+        def to_dict(c: Comment) -> dict:
+            """
+            تبدیل یک کامنت به دیکشنری قابل سریال‌سازی
+            """
+            user_obj = getattr(c, 'user', None)
+            user_data = {
+                'id': user_obj.id if user_obj else None,
+                'username': user_obj.username if user_obj else 'کاربر ناشناس',
+                'avatar_url': (
+                    url_for('wiki.uploaded_file', filename=user_obj.avatar) +
+                    f'?v={int(datetime.utcnow().timestamp())}'
+                ) if user_obj and user_obj.avatar else
+                  url_for('static', filename='images/default_avatar.png')
+            }
+
+            children = []
+            # پیدا کردن تمام بچه‌های مستقیم این کامنت
+            for child in comments:
+                if child.parent_id == c.id and not getattr(child, 'deleted', False):
+                    children.append(to_dict(child))
+
             return {
                 'id': c.id,
                 'page': c.page,
-                'user': {'id': c.user.id, 'username': c.user.username, 'avatar': c.user.avatar},
+                'user': user_data,
                 'parent_id': c.parent_id,
-                'content': c.content,
-                'created_at': c.created_at.isoformat(),
+                'content': c.content or '',
+                'created_at': c.created_at.isoformat() if c.created_at else None,
                 'edited_at': c.edited_at.isoformat() if c.edited_at else None,
-                'deleted': c.deleted,
-                'children': [to_dict(ch) for ch in c.children]
+                'deleted': getattr(c, 'deleted', False),
+                'can_edit': (
+                    current_user.is_authenticated and
+                    (current_user.id == c.user_id or getattr(current_user, 'role', None) == 'admin')
+                ),
+                'children': children
             }
-        out = [to_dict(c) for c in comments if c.parent_id is None]
-        return jsonify({'success': True, 'comments': out})
-    except Exception:
-        current_app.logger.exception("api_comments failed")
-        return jsonify({'success': False, 'comments': []}), 500
+
+        # فقط rootهایی که حذف نشده‌اند + فرزندانشان
+        result = [
+            to_dict(root)
+            for root in roots
+            if not getattr(root, 'deleted', False)
+        ]
+
+        return jsonify({
+            'success': True,
+            'comments': result,
+            'count': len(result),
+            'total_comments': len(comments)
+        })
+
+    except Exception as exc:
+        current_app.logger.exception(
+            f"خطا در بارگذاری کامنت‌های صفحه {page_name!r}: {exc}"
+        )
+        return jsonify({
+            'success': False,
+            'error': 'خطای سرور در بارگذاری کامنت‌ها',
+            'message': str(exc) if current_app.debug else None
+        }), 500
+
+
+from datetime import datetime, timezone
+from typing import Dict, Any
+
+
+
+
+@wiki_bp.route('/page/<path:page_name>', methods=['GET'], endpoint='view_page')
+def view_page(page_name: str):
+    page = Page.query.filter_by(slug=page_name).first()
+    if not page:
+        flash('صفحه یافت نشد', 'danger')
+        return redirect(url_for('wiki.index'))
+
+    # دریافت لیست فایل‌ها از مدل
+    gallery = page.get_gallery() or []
+    videos = page.get_videos() or []
+    personnel = page.get_personnel() or []
+
+    # ساخت URL تصویر شاخص (در صورت وجود)
+    feature_image_url = url_for('wiki.uploaded_file', filename=page.feature_image) if page.feature_image else None
+
+    # ---------- دریافت و ساخت درخت کامنت‌ها ----------
+    root_comments = []
+    if Comment is not None:
+        try:
+            # همه کامنت‌های صفحه (حذف‌نشده) به ترتیب زمان
+            comments = Comment.query.filter_by(
+                page=page_name,
+                deleted=False
+            ).order_by(Comment.created_at.asc()).all()
+
+            # لود رابطه user برای همه کامنت‌ها (جلوگیری از N+1)
+            for c in comments:
+                _ = c.user
+
+            # دیکشنری برای دسترسی سریع فرزندان هر کامنت
+            children_map = {}
+            for c in comments:
+                if c.parent_id not in children_map:
+                    children_map[c.parent_id] = []
+                children_map[c.parent_id].append(c)
+
+            # ریشه‌ها (کامنت‌های بدون والد)
+            root_comments = children_map.get(None, [])
+
+            # به هر کامنت لیست فرزندانش را به‌صورت ویژگی اضافه می‌کنیم
+            for c in comments:
+                c.children = children_map.get(c.id, [])
+        except Exception:
+            current_app.logger.exception("خطا در دریافت کامنت‌ها برای صفحه %s", page_name)
+            root_comments = []
+    # ------------------------------------------------
+
+    return render_template(
+        'page.html',
+        page=page,
+        page_name=page_name,
+        title=page.title,
+        subtitle=page.subtitle,
+        content=page.content,
+        tags=page.tags.split(',') if page.tags else [],
+        feature_image=page.feature_image,  # اضافه شد
+        feature_image_url=feature_image_url,
+        gallery=gallery,
+        videos=videos,
+        personnel=personnel,
+        excerpt=page.excerpt,
+        root_comments=root_comments
+    )
 
 
 @wiki_bp.route('/page/<path:page_name>/comment', methods=['POST'], endpoint='add_comment')
 @login_required
 def add_comment(page_name: str):
+    content = request.form.get('content', '').strip()
+    parent_id = request.form.get('parent_id', type=int, default=None)
+
+    if not content:
+        return jsonify({
+            'success': False,
+            'error': 'نظر نمی‌تواند خالی باشد'
+        }), 400
+
+    comment = Comment(
+        page=page_name,
+        user_id=current_user.id,
+        content=content,
+        parent_id=parent_id
+    )
+    db.session.add(comment)
+    db.session.commit()
+
+    # بارگذاری اطلاعات کاربر برای پاسخ
+    user = current_user
+    avatar_url = url_for('wiki.uploaded_file', filename=user.avatar) if user.avatar else url_for('static', filename='images/default_avatar.png')
+    avatar_url += f'?v={int(datetime.utcnow().timestamp())}'  # جلوگیری از کش
+
+    comment_data = {
+        'id': comment.id,
+        'parent_id': comment.parent_id,
+        'content': comment.content,
+        'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M'),
+        'user': {
+            'username': user.username,
+            'avatar_url': avatar_url
+        },
+        'can_edit': True  # چون خود کاربر ارسال کرده
+    }
+
+    return jsonify({
+        'success': True,
+        'comment': comment_data
+    }), 201
+
+
+
+
+
+@wiki_bp.route('/comment/<int:c_id>/edit', methods=['POST'])
+@login_required
+def edit_comment(c_id: int) -> tuple[Dict[str, Any], int]:
+    """
+    ویرایش یک کامنت موجود.
+
+    - فقط صاحب کامنت یا ادمین می‌تواند ویرایش کند
+    - اعتبارسنجی محتوا (خالی نبودن، طول مجاز)
+    - به‌روزرسانی فیلد edited_at
+    - بازگشت اطلاعات به‌روزشده برای فرانت‌اند
+    """
+    if Comment is None:
+        return jsonify({
+            'success': False,
+            'error': 'سیستم کامنت فعال نیست'
+        }), 500
+
     try:
+        comment = db.session.get(Comment, c_id)
+        if not comment:
+            return jsonify({
+                'success': False,
+                'error': 'کامنت یافت نشد'
+            }), 404
+
+        # چک مجوز ویرایش
+        if comment.user_id != current_user.id and getattr(current_user, 'role', None) != 'admin':
+            return jsonify({
+                'success': False,
+                'error': 'شما اجازه ویرایش این کامنت را ندارید'
+            }), 403
+
         content = (request.form.get('content') or '').strip()
-        parent_id = request.form.get('parent_id') or None
         if not content:
-            return jsonify({'success': False, 'error': 'empty'}), 400
-        max_len = current_app.config.get('MAX_COMMENT_LENGTH', 4000)
-        if len(content) > max_len:
-            return jsonify({'success': False, 'error': 'too_long'}), 400
-        page_file = _page_file_path(page_name)
-        if not os.path.exists(page_file):
-            return jsonify({'success': False, 'error': 'page_not_found'}), 404
-        if Comment is None:
-            return jsonify({'success': False, 'error': 'comments not enabled'}), 500
-        comment = Comment(page=page_name, user_id=current_user.id, content=content)  # type: ignore
-        if parent_id:
-            try:
-                pid = int(parent_id)
-                parent = db.session.get(Comment, pid)  # type: ignore
-                if parent and parent.page == page_name:
-                    comment.parent_id = pid
-            except Exception:
-                current_app.logger.exception("bad parent_id")
-        db.session.add(comment)  # type: ignore
-        db.session.commit()  # type: ignore
-        _ = comment.user
-        html = build_comment_html(comment)
-        avatar_url = url_for('wiki.uploaded_file', filename=current_user.avatar) + f'?v={int(getattr(current_user, "created_at", datetime.utcnow()).timestamp() if getattr(current_user, "created_at", None) else (uuid.uuid4().int & 0xffffffff))}'
-        return jsonify({'success': True, 'comment': {'id': comment.id, 'parent_id': comment.parent_id, 'html': html, 'avatar_url': avatar_url}}), 201
-    except Exception:
-        current_app.logger.exception("add_comment failed")
-        try:
-            if db is not None:
-                db.session.rollback()
-        except Exception:
-            pass
-        return jsonify({'success': False, 'error': 'internal'}), 500
+            return jsonify({
+                'success': False,
+                'error': 'محتوای کامنت نمی‌تواند خالی باشد'
+            }), 400
 
+        max_length = current_app.config.get('MAX_COMMENT_LENGTH', 4000)
+        if len(content) > max_length:
+            return jsonify({
+                'success': False,
+                'error': f'طول کامنت بیش از حد مجاز است (حداکثر {max_length} کاراکتر)'
+            }), 400
 
-@wiki_bp.route('/comment/<int:c_id>/edit', methods=['POST'], endpoint='edit_comment')
-@login_required
-def edit_comment(c_id: int):
-    if Comment is None:
-        return jsonify({'success': False, 'error': 'not enabled'}), 500
-    try:
-        comment = db.session.get(Comment, c_id)  # type: ignore
-        if not comment:
-            return jsonify({'success': False, 'error': 'not found'}), 404
-        if comment.user_id != current_user.id and getattr(current_user, 'role', None) != 'admin':
-            return jsonify({'success': False, 'error': 'forbidden'}), 403
-        content = request.form.get('content','').strip()
-        if not content:
-            return jsonify({'success': False, 'error': 'empty'}), 400
-        max_len = current_app.config.get('MAX_COMMENT_LENGTH', 4000)
-        if len(content) > max_len:
-            return jsonify({'success': False, 'error': 'too_long'}), 400
+        # اعمال تغییرات
         comment.content = content
-        comment.edited_at = datetime.utcnow()
-        db.session.commit()  # type: ignore
-        return jsonify({'success': True, 'id': comment.id, 'edited_at': comment.edited_at.isoformat()})
-    except Exception:
-        current_app.logger.exception("edit_comment failed")
-        return jsonify({'success': False, 'error': 'internal'}), 500
+        comment.edited_at = datetime.now(timezone.utc)
+
+        db.session.commit()
+
+        # لود مجدد برای اطمینان
+        db.session.refresh(comment)
+        _ = comment.user
+
+        # ساخت HTML به‌روزشده
+        html = build_comment_html(comment)
+
+        # آواتار با timestamp
+        avatar_filename = current_user.avatar if current_user.avatar else 'default_avatar.png'
+        avatar_url = url_for('wiki.uploaded_file', filename=avatar_filename)
+        avatar_url += f'?v={int(datetime.now(timezone.utc).timestamp())}'
+
+        # پاسخ کامل برای فرانت‌اند
+        comment_payload: Dict[str, Any] = {
+            'id': comment.id,
+            'parent_id': comment.parent_id,
+            'content': comment.content,
+            'html': html,
+            'avatar_url': avatar_url,
+            'user': {
+                'username': current_user.username,
+                'avatar_url': avatar_url
+            },
+            'created_at': (
+                comment.created_at.strftime('%Y-%m-%d %H:%M')
+                if comment.created_at else datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')
+            ),
+            'edited_at': (
+                comment.edited_at.strftime('%Y-%m-%d %H:%M')
+                if comment.edited_at else None
+            ),
+            'can_edit': True
+        }
+
+        return jsonify({
+            'success': True,
+            'comment': comment_payload
+        }), 200
+
+    except Exception as exc:
+        db.session.rollback()
+        logger.exception(f"خطا در ویرایش کامنت {c_id}: {exc}")
+        return jsonify({
+            'success': False,
+            'error': 'خطای سرور در ویرایش کامنت',
+            'message': str(exc) if current_app.debug else None
+        }), 500
 
 
-@wiki_bp.route('/comment/<int:c_id>/delete', methods=['POST'], endpoint='delete_comment')
+@wiki_bp.route('/page/<path:page_name>/comment/<int:comment_id>/delete', methods=['POST'])
 @login_required
-def delete_comment(c_id: int):
-    if Comment is None:
-        return jsonify({'success': False, 'error': 'not enabled'}), 500
+def delete_comment(page_name, comment_id):
+    comment = Comment.query.get(comment_id)  # بدون get_or_404
+
+    if not comment:
+        return jsonify({
+            'success': False,
+            'error': 'کامنت یافت نشد یا قبلاً حذف شده است'
+        }), 404
+
+    if comment.user_id != current_user.id and getattr(current_user, 'role', None) != 'admin':
+        return jsonify({
+            'success': False,
+            'error': 'شما اجازه حذف این کامنت را ندارید'
+        }), 403
+
     try:
-        comment = db.session.get(Comment, c_id)  # type: ignore
-        if not comment:
-            return jsonify({'success': False, 'error': 'not found'}), 404
-        if comment.user_id != current_user.id and getattr(current_user, 'role', None) != 'admin':
-            return jsonify({'success': False, 'error': 'forbidden'}), 403
-        comment.deleted = True
-        comment.deleted_at = datetime.utcnow()
-        comment.content = '[حذف‌شده]'
-        db.session.commit()  # type: ignore
-        return jsonify({'success': True, 'id': comment.id})
-    except Exception:
-        current_app.logger.exception("delete_comment failed")
-        return jsonify({'success': False, 'error': 'internal'}), 500
+        db.session.delete(comment)
+        db.session.commit()
+        logger.info(f"کامنت {comment_id} در صفحه {page_name} توسط {current_user.username} حذف شد")
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        logger.exception(f"خطا در حذف کامنت {comment_id}")
+        return jsonify({
+            'success': False,
+            'error': 'خطا در حذف کامنت'
+        }), 500
+
 
 
 # -------------------- Suggest / Discover --------------------

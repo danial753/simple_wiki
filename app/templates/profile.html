@@ -1,181 +1,241 @@
+```html
 {% extends "base.html" %}
-{% block title %}پروفایل — {{ user.username }}{% endblock %}
+
+{% block title %}پروفایل {{ user.username }} | Azin{% endblock %}
 
 {% block content %}
-
-<div class="row justify-content-center">
-  <div class="col-lg-10">
-
-    <div class="card card-surface p-4">
-
-      <div class="row g-4">
-
-        <!-- ===== Avatar Card ===== -->
-        <div class="col-md-4">
-
-          <div class="text-center">
-
-            <div class="position-relative mb-3">
-
-              <!-- مهم: query string تصادفی قوی برای جلوگیری از کش مرورگر -->
-              <img id="avatar-preview"
-                   src="{{ url_for('wiki.uploaded_file', filename=user.avatar) if user.avatar else url_for('static', filename='default_avatar.png') }}?v={{ range(1000000000, 9999999999) | random }}"
-                   class="rounded-circle shadow"
-                   style="width:170px;height:170px;object-fit:cover;"
-                   alt="آواتار {{ user.username }}">
-
-              <label for="avatarInput"
-                     class="btn btn-primary btn-sm position-absolute"
-                     style="bottom:0;right:50%;transform:translate(50%,50%);">
-                تغییر
-              </label>
-
-            </div>
-
-            <input type="file"
-                   name="avatar"
-                   accept="image/*"
-                   class="d-none"
-                   id="avatarInput"
-                   form="profileForm">
-
-            <h5 class="mb-1">{{ user.full_name or user.username }}</h5>
-
-            <div class="text-muted small mb-2">
-              @{{ user.username }}
-            </div>
-
-            {% if user.role %}
-            <span class="badge bg-primary-subtle text-primary px-3 py-2">
-              {{ user.role }}
-            </span>
-            {% endif %}
-
-            <div class="small text-muted mt-3">
-              png, jpg, jpeg, gif, webp — حداکثر ۲ مگابایت
-            </div>
-
-          </div>
-
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <!-- کارت اصلی با سایه و انیمیشن -->
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden" data-aos="fade-up">
+        <div class="card-header bg-primary text-white py-3 px-4 border-0">
+          <h4 class="mb-0 fw-bold"><i class="bi bi-person-circle me-2"></i>پروفایل {{ user.username }}</h4>
         </div>
+        <div class="card-body p-4 p-xl-5">
+          <div class="row g-5">
+            <!-- ستون آواتار -->
+            <div class="col-md-4 text-center">
+              <div class="position-relative d-inline-block">
+                <!-- آواتار با حاشیه و سایه -->
+                <div class="avatar-wrapper position-relative">
+                  <img id="avatar-preview"
+                       src="{{ url_for('wiki.uploaded_file', filename=user.avatar) if user.avatar else url_for('static', filename='images/default_avatar.png') }}?v={{ range(1000000000, 9999999999) | random }}"
+                       class="rounded-circle border border-4 border-primary shadow-lg"
+                       style="width: 180px; height: 180px; object-fit: cover;"
+                       alt="آواتار {{ user.username }}">
+                  <!-- دکمه آپلود شناور -->
+                  <label for="avatarInput"
+                         class="btn btn-primary btn-sm rounded-circle position-absolute p-2 hover-scale"
+                         style="bottom: 10px; right: 10px; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-camera-fill"></i>
+                  </label>
+                </div>
+                <input type="file" name="avatar" accept="image/*" class="d-none" id="avatarInput" form="profileForm">
+              </div>
 
-
-        <!-- ===== Form ===== -->
-        <div class="col-md-8">
-
-          <h4 class="mb-3 fw-bold">
-            تنظیمات حساب
-          </h4>
-
-          <form id="profileForm"
-                method="POST"
-                action="{{ url_for('auth.profile') }}"
-                enctype="multipart/form-data"
-                novalidate>
-
-            <div class="mb-3">
-              <label class="form-label">نام کاربری</label>
-              <input class="form-control"
-                     value="{{ user.username }}"
-                     disabled>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">نام کامل</label>
-              <input class="form-control"
-                     name="full_name"
-                     placeholder="مثلاً علی رضایی"
-                     value="{{ user.full_name or '' }}">
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">ایمیل</label>
-              <input class="form-control"
-                     value="{{ user.email }}"
-                     disabled>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">درباره من</label>
-              <textarea class="form-control"
-                        name="bio"
-                        rows="4"
-                        placeholder="کمی درباره خودتان بنویسید...">{{ user.bio or '' }}</textarea>
-            </div>
-
-            <hr class="my-4">
-
-            <h6 class="fw-bold mb-2">
-              تغییر رمز عبور
-            </h6>
-
-            <div class="mb-3">
-              <input type="password"
-                     class="form-control"
-                     name="password"
-                     placeholder="رمز جدید (اختیاری)">
-              <div class="form-text">
-                اگر نمی‌خواهید رمز تغییر کند، این فیلد را خالی بگذارید.
+              <h5 class="mt-4 mb-1 fw-bold">{{ user.full_name or user.username }}</h5>
+              <div class="text-muted small mb-2">
+                <i class="bi bi-at me-1"></i>{{ user.username }}
+              </div>
+              {% if user.role %}
+                <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill">{{ user.role }}</span>
+              {% endif %}
+              <div class="small text-muted mt-3 bg-light p-3 rounded-3">
+                <i class="bi bi-info-circle me-1"></i>فرمت‌های مجاز: png, jpg, jpeg, gif, webp — حداکثر ۲ مگابایت
               </div>
             </div>
 
-            <div class="d-flex gap-2 mt-4">
+            <!-- ستون فرم -->
+            <div class="col-md-8">
+              <h4 class="fw-bold mb-4 pb-2 border-bottom border-2 border-primary">تنظیمات حساب</h4>
+              <form id="profileForm" method="POST" action="{{ url_for('auth.profile') }}" enctype="multipart/form-data" novalidate>
+                <!-- نام کاربری (غیرفعال) -->
+                <div class="mb-3">
+                  <label class="form-label fw-semibold text-secondary"><i class="bi bi-person me-1 text-primary"></i>نام کاربری</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-person text-primary"></i></span>
+                    <input class="form-control bg-light border-0" value="{{ user.username }}" disabled>
+                  </div>
+                </div>
 
-              <button type="submit" class="btn btn-primary px-4">
-                ذخیره تغییرات
-              </button>
+                <!-- نام کامل -->
+                <div class="mb-3">
+                  <label class="form-label fw-semibold text-secondary"><i class="bi bi-card-text me-1 text-primary"></i>نام کامل</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-card-text text-primary"></i></span>
+                    <input class="form-control bg-light border-0" name="full_name" placeholder="مثلاً علی رضایی" value="{{ user.full_name or '' }}">
+                  </div>
+                </div>
 
-              <a href="{{ url_for('wiki.index') }}"
-                 class="btn btn-outline-secondary">
-                بازگشت
-              </a>
+                <!-- ایمیل (غیرفعال) -->
+                <div class="mb-3">
+                  <label class="form-label fw-semibold text-secondary"><i class="bi bi-envelope me-1 text-primary"></i>ایمیل</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-envelope text-primary"></i></span>
+                    <input class="form-control bg-light border-0" value="{{ user.email }}" disabled>
+                  </div>
+                </div>
 
+                <!-- درباره من -->
+                <div class="mb-3">
+                  <label class="form-label fw-semibold text-secondary"><i class="bi bi-chat me-1 text-primary"></i>درباره من</label>
+                  <textarea class="form-control bg-light border-0" name="bio" rows="4" placeholder="کمی درباره خودتان بنویسید...">{{ user.bio or '' }}</textarea>
+                </div>
+
+                <hr class="my-4">
+
+                <h6 class="fw-bold mb-3"><i class="bi bi-key me-2 text-primary"></i>تغییر رمز عبور</h6>
+                <div class="mb-3">
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-lock text-primary"></i></span>
+                    <input type="password" class="form-control bg-light border-0" name="password" placeholder="رمز جدید (اختیاری)">
+                  </div>
+                  <div class="form-text text-muted small mt-2">
+                    <i class="bi bi-info-circle me-1"></i>اگر نمی‌خواهید رمز تغییر کند، این فیلد را خالی بگذارید.
+                  </div>
+                </div>
+
+                <!-- دکمه‌ها -->
+                <div class="d-flex flex-wrap gap-3 mt-5">
+                  <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 hover-scale">
+                    <i class="bi bi-check-circle me-2"></i>ذخیره تغییرات
+                  </button>
+                  <a href="{{ url_for('wiki.index') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2 hover-scale">
+                    <i class="bi bi-arrow-right me-2"></i>بازگشت
+                  </a>
+                </div>
+              </form>
             </div>
-
-          </form>
-
+          </div>
         </div>
-
       </div>
     </div>
   </div>
 </div>
-
 {% endblock %}
 
+{% block extra_styles %}
+<style>
+  /* استایل‌های سفارشی برای پروفایل */
+  .hover-scale {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-scale:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 25px rgba(13, 110, 253, 0.3) !important;
+  }
+
+  .bg-primary-soft {
+    background: rgba(13, 110, 253, 0.12);
+  }
+
+  .avatar-wrapper {
+    display: inline-block;
+    position: relative;
+  }
+
+  /* افکت hover روی آواتار */
+  .avatar-wrapper img {
+    transition: transform 0.3s ease;
+  }
+  .avatar-wrapper:hover img {
+    transform: scale(1.02);
+  }
+
+  /* دکمه آپلود آواتار */
+  label[for="avatarInput"] {
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+  label[for="avatarInput"]:hover {
+    background: var(--primary-dark) !important;
+    transform: scale(1.1);
+  }
+
+  /* استایل فیلدهای فرم با فوکس */
+  .input-group-text {
+    border-radius: 12px 0 0 12px;
+    transition: all 0.2s ease;
+  }
+  .form-control {
+    border-radius: 0 12px 12px 0;
+    transition: all 0.2s ease;
+  }
+  .form-control:focus {
+    box-shadow: none;
+    background-color: #fff !important;
+    border: 2px solid var(--primary) !important;
+    border-left: none !important;
+  }
+  .input-group:focus-within .input-group-text {
+    background-color: #fff !important;
+    border: 2px solid var(--primary) !important;
+    border-right: none !important;
+    color: var(--primary);
+  }
+
+  /* کارت */
+  .card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* responsive */
+  @media (max-width: 768px) {
+    .col-md-4 {
+      margin-bottom: 2rem;
+    }
+    .btn {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block extra_scripts %}
 <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('avatarInput');
+    const preview = document.getElementById('avatar-preview');
 
-document.addEventListener('DOMContentLoaded', function(){
+    if (input && preview) {
+      input.addEventListener('change', function(e) {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-  const input = document.getElementById('avatarInput');
-  const preview = document.getElementById('avatar-preview');
+        if (!file.type.startsWith('image/')) {
+          alert('فایل انتخاب‌شده تصویر نیست.');
+          input.value = '';
+          return;
+        }
 
-  if(!input || !preview) return;
+        // بررسی حجم فایل (حداکثر 2 مگابایت)
+        if (file.size > 2 * 1024 * 1024) {
+          alert('حجم فایل نباید بیشتر از ۲ مگابایت باشد.');
+          input.value = '';
+          return;
+        }
 
-  input.addEventListener('change', function(e){
-
-    const file = e.target.files?.[0];
-    if(!file) return;
-
-    if(!file.type.startsWith('image/')){
-        alert('فایل انتخاب‌شده تصویر نیست.');
-        input.value = '';
-        return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          preview.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
     }
 
-    // پیش‌نمایش محلی (قبل از آپلود)
-    const reader = new FileReader();
-
-    reader.onload = function(ev){
-        preview.src = ev.target.result;
-    };
-
-    reader.readAsDataURL(file);
+    // فعال‌سازی AOS (اگر در base.html نباشد)
+    if (typeof AOS !== 'undefined') {
+      AOS.init({
+        duration: 800,
+        once: true,
+        easing: 'ease-in-out'
+      });
+    }
   });
-
-});
-
 </script>
 {% endblock %}
+```

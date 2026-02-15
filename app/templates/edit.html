@@ -131,6 +131,101 @@
       margin-top: 2rem;
     }
   }
+
+  /* استایل‌های پیشرفته برای ویرایشگر متن */
+  .ck.ck-editor {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border: 1px solid #e9f0ff;
+    margin-top: 0.5rem;
+    transition: box-shadow 0.3s ease;
+    width: 100%; /* اطمینان از عرض کامل */
+  }
+  .ck.ck-editor:hover {
+    box-shadow: 0 15px 40px rgba(13,110,253,0.12);
+  }
+  .ck.ck-editor__top {
+    border-radius: 16px 16px 0 0;
+    border-bottom: 1px solid #e2e8f0;
+    background: linear-gradient(135deg, #f8f9fc, #ffffff);
+    padding: 0.25rem 0.5rem;
+  }
+  .ck.ck-editor__main {
+    border-radius: 0 0 16px 16px;
+    background: #ffffff;
+  }
+  .ck.ck-content {
+    min-height: 400px;
+    padding: 2rem;
+    font-family: 'Vazirmatn', system-ui, sans-serif;
+    font-size: 1rem;
+    line-height: 1.8;
+    background: #ffffff;
+    border: none;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.02);
+    transition: box-shadow 0.2s ease;
+    word-break: break-word;        /* جلوگیری از خروج متن طولانی */
+    overflow-wrap: break-word;
+    white-space: pre-wrap;          /* حفظ فاصله‌ها و شکستن خطوط */
+    max-width: 100%;                /* عدم تجاوز از عرض */
+  }
+  .ck.ck-content:focus {
+    outline: none;
+    box-shadow: inset 0 2px 8px rgba(13,110,253,0.15);
+  }
+  /* استایل نوار ابزار */
+  .ck.ck-toolbar {
+    border: none !important;
+    background: transparent !important;
+  }
+  .ck.ck-button {
+    border-radius: 8px !important;
+    transition: all 0.2s ease;
+  }
+  .ck.ck-button:hover {
+    background: var(--primary) !important;
+    color: white !important;
+    transform: translateY(-2px);
+  }
+  .ck.ck-button:hover .ck-button__icon {
+    color: white !important;
+  }
+  /* استایل placeholder */
+  .ck.ck-editor__editable.ck-placeholder::before {
+    color: #9aa9b9 !important;
+    font-style: italic;
+    font-weight: 400;
+    opacity: 0.7;
+  }
+  /* حاشیه داخلی برای ویرایشگر در حالت پیش‌نمایش */
+  .content-preview {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.02);
+    border: 1px solid #e9f0ff;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  /* استایل fallback برای textarea (اگر CKEditor بارگذاری نشود) */
+  textarea#editor {
+    width: 100%;
+    min-height: 400px;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    font-family: 'Vazirmatn', system-ui, sans-serif;
+    line-height: 1.8;
+    resize: vertical;
+    background: #ffffff;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.02);
+  }
+  textarea#editor:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(13,110,253,0.15);
+  }
 </style>
 {% endblock %}
 
@@ -150,10 +245,10 @@
           <div class="mb-4">
             <label for="pageTitle" class="form-label">عنوان <span class="text-danger">*</span></label>
             <input type="text" name="page_title" id="pageTitle" class="form-control form-control-lg"
-                   value="{{ page_title or '' }}" placeholder="عنوان صفحه را وارد کنید" required>
+                   value="{{ title or page_title or '' }}" placeholder="عنوان صفحه را وارد کنید" required>
           </div>
 
-          <!-- زیرعنوان (اختیاری) -->
+          <!-- زیرعنوان -->
           <div class="mb-4">
             <label for="subtitle" class="form-label">زیرعنوان / شعار کوتاه</label>
             <input type="text" name="subtitle" id="subtitle" class="form-control"
@@ -176,60 +271,59 @@
             <label for="featureInput" class="form-label">تصویر شاخص (پیشنهاد: 1200×630)</label>
             <input id="featureInput" name="feature_image" type="file" class="form-control" accept="image/*">
             <div class="mt-3 text-center">
-              <img id="featurePreview" src="{{ feature_image_url if feature_image_url else '' }}"
+              <img id="featurePreview" src="{{ feature_image_url if feature_image_url else url_for('static', filename='placeholder.jpg') }}"
                    class="preview-img" style="{% if not feature_image_url %}display:none;{% endif %}">
             </div>
           </div>
 
-          <!-- گالری تصاویر (چندتایی) -->
+          <!-- گالری تصاویر -->
           <div class="mb-4">
             <label class="form-label">مستندات تصویری (چندین عکس)</label>
             <div id="galleryDropzone" class="dropzone mb-3">
               <i class="bi bi-images fs-1 text-primary"></i>
               <div class="mt-2">عکس‌ها را بکشید یا کلیک کنید</div>
-              <small class="text-muted d-block mt-1">پشتیبانی: jpg, png, gif - حداکثر 5 مگابایت هر عکس</small>
+              <small class="text-muted d-block mt-1">پشتیبانی: jpg, png, gif - حداکثر 5 مگابایت</small>
             </div>
-            <input id="galleryInput" type="file" accept="image/*" multiple style="display:none;">
+            <input id="galleryInput" name="gallery_images[]" type="file" accept="image/*" multiple style="display:none;">
             <div id="galleryThumbs" class="d-flex flex-wrap mt-3"></div>
-            <input type="hidden" name="gallery_images" id="galleryHidden" value="{{ gallery|join(',') if gallery else '' }}">
+            <!-- فیلدهای hidden برای ارسال نام فایل‌های قدیمی -->
+            <input type="hidden" name="existing_gallery" id="existingGallery" value="">
           </div>
 
-          <!-- ویدیوها (چندتایی با حجم بالا) -->
+          <!-- ویدیوها -->
           <div class="mb-4">
             <label class="form-label">مستندات ویدیویی (چندین ویدیو تا 2 گیگ)</label>
             <div id="videoDropzone" class="dropzone mb-3">
               <i class="bi bi-film fs-1 text-primary"></i>
               <div class="mt-2">ویدیوها را بکشید یا کلیک کنید</div>
-              <small class="text-muted d-block mt-1">پشتیبانی: mp4, mov - آپلود chunked برای فایل‌های بزرگ</small>
+              <small class="text-muted d-block mt-1">پشتیبانی: mp4, mov - آپلود chunked</small>
             </div>
-            <input id="videoInput" type="file" accept="video/*" multiple style="display:none;">
+            <input id="videoInput" name="videos[]" type="file" accept="video/*" multiple style="display:none;">
             <div id="videoThumbs" class="d-flex flex-wrap mt-3"></div>
-            <input type="hidden" name="videos" id="videosHidden" value="{{ videos|join(',') if videos else '' }}">
+            <input type="hidden" name="existing_videos" id="existingVideos" value="">
             <small id="videoStatus" class="d-block text-muted mt-2"></small>
           </div>
 
-          <!-- اعضای تیم / افراد درگیر -->
+          <!-- افراد درگیر -->
           <div class="mb-4">
             <label class="form-label">افراد درگیر و مسئولیت‌ها</label>
             <div id="personnelContainer"></div>
             <button id="addPersonBtn" type="button" class="btn btn-outline-primary btn-sm mt-2">
               <i class="bi bi-plus-circle me-1"></i> افزودن فرد
             </button>
-            <input type="hidden" name="personnel" id="personnelHidden" value="{{ personnel|tojson|safe if personnel else '[]' }}">
+            <input type="hidden" name="personnel" id="personnelHidden" value='{{ personnel|tojson|safe if personnel else "[]" }}'>
           </div>
 
           <!-- محتوا -->
           <div class="mb-5">
             <label for="editor" class="form-label">محتوای اصلی صفحه</label>
-            <textarea id="editor" name="content">{{ content | safe }}</textarea>
+            <textarea id="editor" name="content">{{ content | safe if content is defined else '' }}</textarea>
           </div>
 
           <!-- دکمه‌ها -->
           <div class="d-flex flex-wrap gap-3 justify-content-end">
-            <a href="{{ url_for('wiki.index') }}" class="btn btn-outline-secondary px-4 py-2">
-              انصراف
-            </a>
-            <button id="saveBtn" type="submit" class="btn btn-primary btn-save px-5 py-2">
+            <a href="{{ url_for('wiki.index') }}" class="btn btn-outline-secondary px-4 py-2">انصراف</a>
+            <button id="saveBtn" type="submit" class="btn btn-primary px-5 py-2">
               <i class="bi bi-save me-2"></i> ذخیره صفحه
             </button>
           </div>
@@ -246,10 +340,10 @@
         </div>
 
         <div class="preview-body">
-          <img id="previewImg" src="{{ feature_image_url if feature_image_url else '/static/placeholder.jpg' }}"
-               class="preview-img mb-4" alt="پیش‌نمایش">
+          <img id="previewImg" src="{{ feature_image_url if feature_image_url else url_for('static', filename='placeholder.jpg') }}"
+               class="preview-img mb-4" alt="پیش‌نمایش" style="{% if not feature_image_url %}opacity:0.6;{% endif %}">
 
-          <h3 id="previewTitle" class="fw-bold mb-2">{{ page_title or 'عنوان صفحه' }}</h3>
+          <h3 id="previewTitle" class="fw-bold mb-2">{{ title or page_title or 'عنوان صفحه' }}</h3>
 
           <div id="previewSubtitle" class="text-muted mb-3">{{ subtitle or 'زیرعنوان / شعار کوتاه' }}</div>
 
@@ -271,7 +365,11 @@
           </div>
 
           <div class="content-preview border-top pt-4 lh-lg text-secondary">
-            {{ content | safe or '<p class="text-muted fst-italic text-center py-5">محتوا اینجا نمایش داده می‌شود...</p>' }}
+            {% if content %}
+              {{ content | safe }}
+            {% else %}
+              <p class="text-muted fst-italic text-center py-5">محتوا اینجا نمایش داده می‌شود...</p>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -286,336 +384,439 @@
 <script src="https://cdn.ckeditor.com/ckeditor5/43.1.0/classic/ckeditor.js"></script>
 
 <script>
-// متغیرهای اولیه
-let tags = {{ (tags.split(',') if tags is defined and tags else []) | tojson }};
-let gallery = {{ gallery|tojson if gallery is defined else '[]' }};
-let videos = {{ videos|tojson if videos is defined else '[]' }};
-let personnel = {{ personnel|tojson if personnel is defined else '[]' }};
+// ============================================
+// edit.js – مدیریت پیشرفته آپلود و ارسال فرم
+// ============================================
 
-// تابع کمک‌کننده برای ایجاد المان
-const createEl = (tag, attrs = {}, children = []) => {
-  const el = document.createElement(tag);
-  Object.assign(el, attrs);
-  children.forEach(child => el.appendChild(child));
-  return el;
-};
+(function() {
+  'use strict';
 
-// مدیریت تگ‌ها
-const tagInput = document.getElementById('tagInput');
-const addTagBtn = document.getElementById('addTagBtn');
-const tagsContainer = document.getElementById('tagsContainer');
-const tagsHidden = document.getElementById('tagsHidden');
-const previewTags = document.getElementById('previewTags');
+  // ---------- متغیرهای سراسری ----------
+  window.uploadBaseUrl = "{{ url_for('auth.uploads_file', filename='') | safe }}";
+  window.streamVideoBaseUrl = "{{ url_for('wiki.stream_video', filename='') | safe }}";
 
-function renderTags() {
-  tagsContainer.innerHTML = '';
-  previewTags.innerHTML = '';
+  // داده‌های اولیه از سرور
+  let tags = {{ (tags.split(',') if tags is defined and tags else []) | tojson | safe }};
+  let personnel = {{ personnel|tojson if personnel is defined else '[]' | safe }};
 
-  tags.forEach((tag, i) => {
-    const pill = createEl('span', { className: 'tag-pill' }, [
-      document.createTextNode(tag),
-      createEl('button', { type: 'button', className: 'btn-close btn-close-sm ms-1', style: 'font-size:0.65rem;', onclick: () => {
-        tags.splice(i, 1);
-        renderTags();
-      }})
-    ]);
-    tagsContainer.appendChild(pill);
+  // آرایه‌های مخصوص فایل‌ها با ساختار: { name, url, file, isNew }
+  let galleryItems = [];
+  let videoItems = [];
 
-    const prevPill = createEl('span', { className: 'badge bg-primary-subtle text-primary me-2 mb-2 px-3 py-2' }, [
-      document.createTextNode(tag)
-    ]);
-    previewTags.appendChild(prevPill);
-  });
+  // مقداردهی اولیه گالری از فایل‌های موجود
+  {% if gallery and gallery|length > 0 %}
+    {% for img in gallery %}
+      galleryItems.push({
+        name: "{{ img }}",
+        url: getMediaUrl("{{ img }}", 'image'),
+        file: null,
+        isNew: false
+      });
+    {% endfor %}
+  {% endif %}
 
-  tagsHidden.value = tags.join(',');
-}
+  // مقداردهی اولیه ویدیوها از فایل‌های موجود
+  {% if videos and videos|length > 0 %}
+    {% for vid in videos %}
+      videoItems.push({
+        name: "{{ vid }}",
+        url: getMediaUrl("{{ vid }}", 'video'),
+        file: null,
+        isNew: false
+      });
+    {% endfor %}
+  {% endif %}
 
-addTagBtn.onclick = () => {
-  let value = tagInput.value.trim();
-  if (!value) return;
-  value.split(',').forEach(v => {
-    v = v.trim();
-    if (v && !tags.includes(v)) tags.push(v);
+  // ---------- توابع کمکی ----------
+  function getMediaUrl(item, type = 'image') {
+    if (!item) return '';
+    if (item.startsWith('blob:')) return item;
+    const base = type === 'image' ? window.uploadBaseUrl : window.streamVideoBaseUrl;
+    return base + item;
+  }
+
+  const createEl = (tag, attrs = {}, children = []) => {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      try { el[k] = v; } catch { el.setAttribute(k, v); }
+    }
+    children.forEach(child => el.appendChild(child));
+    return el;
+  };
+
+  // ---------- مدیریت تگ‌ها ----------
+  const tagInput = document.getElementById('tagInput');
+  const addTagBtn = document.getElementById('addTagBtn');
+  const tagsContainer = document.getElementById('tagsContainer');
+  const tagsHidden = document.getElementById('tagsHidden');
+  const previewTags = document.getElementById('previewTags');
+
+  function renderTags() {
+    tagsContainer.innerHTML = '';
+    previewTags.innerHTML = '';
+    tags.forEach((tag, i) => {
+      const textNode = document.createTextNode(tag);
+      const removeBtn = createEl('button', { type: 'button', className: 'btn-close btn-close-sm ms-1', style: 'font-size:0.65rem;' });
+      removeBtn.addEventListener('click', () => { tags.splice(i, 1); renderTags(); });
+      const pill = createEl('span', { className: 'tag-pill d-inline-flex align-items-center' }, [textNode]);
+      pill.appendChild(removeBtn);
+      tagsContainer.appendChild(pill);
+      const prevPill = createEl('span', { className: 'badge bg-primary-subtle text-primary me-2 mb-2 px-3 py-2' }, [document.createTextNode(tag)]);
+      previewTags.appendChild(prevPill);
+    });
+    tagsHidden.value = tags.join(',');
+  }
+
+  addTagBtn.onclick = () => {
+    let value = tagInput.value.trim();
+    if (!value) return;
+    value.split(',').forEach(v => {
+      v = v.trim();
+      if (v && !tags.includes(v)) tags.push(v);
+    });
+    renderTags();
+    tagInput.value = '';
+    tagInput.focus();
+  };
+
+  tagInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTagBtn.click();
+    }
   });
   renderTags();
-  tagInput.value = '';
-  tagInput.focus();
-};
 
-tagInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    addTagBtn.click();
-  }
-});
+  // ---------- تصویر شاخص ----------
+  const featureInput = document.getElementById('featureInput');
+  const featurePreview = document.getElementById('featurePreview');
+  const previewImg = document.getElementById('previewImg');
 
-renderTags();
-
-// پیش‌نمایش تصویر شاخص
-document.getElementById('featureInput').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const img = document.getElementById('previewImg');
-    img.src = ev.target.result;
-    img.style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-});
-
-// همگام‌سازی عنوان و زیرعنوان
-document.getElementById('pageTitle').addEventListener('input', function() {
-  document.getElementById('previewTitle').textContent = this.value.trim() || 'عنوان صفحه';
-});
-
-document.getElementById('subtitle').addEventListener('input', function() {
-  document.getElementById('previewSubtitle').textContent = this.value.trim() || 'زیرعنوان / شعار کوتاه';
-});
-
-// مدیریت گالری تصاویر
-const galleryDropzone = document.getElementById('galleryDropzone');
-const galleryInput = document.getElementById('galleryInput');
-const galleryThumbs = document.getElementById('galleryThumbs');
-const galleryHidden = document.getElementById('galleryHidden');
-const previewGallery = document.getElementById('previewGallery').querySelector('.d-flex');
-
-galleryDropzone.onclick = () => galleryInput.click();
-
-galleryDropzone.addEventListener('dragover', e => {
-  e.preventDefault();
-  galleryDropzone.classList.add('dragover');
-});
-
-galleryDropzone.addEventListener('dragleave', () => galleryDropzone.classList.remove('dragover'));
-
-galleryDropzone.addEventListener('drop', e => {
-  e.preventDefault();
-  galleryDropzone.classList.remove('dragover');
-  handleGalleryFiles(e.dataTransfer.files);
-});
-
-galleryInput.addEventListener('change', e => handleGalleryFiles(e.target.files));
-
-function handleGalleryFiles(files) {
-  Array.from(files).forEach(file => {
-    if (!file.type.startsWith('image/')) return;
+  featureInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
-      gallery.push(ev.target.result); // URL موقت
-      renderGallery();
+      const src = ev.target.result;
+      featurePreview.src = src;
+      featurePreview.style.display = 'block';
+      previewImg.src = src;
+      previewImg.style.opacity = 1;
     };
     reader.readAsDataURL(file);
   });
-}
 
-function renderGallery() {
-  galleryThumbs.innerHTML = '';
-  previewGallery.innerHTML = '';
+  // ---------- عنوان و زیرعنوان ----------
+  const pageTitle = document.getElementById('pageTitle');
+  const subtitle = document.getElementById('subtitle');
+  const previewTitle = document.getElementById('previewTitle');
+  const previewSubtitle = document.getElementById('previewSubtitle');
 
-  gallery.forEach((url, i) => {
-    const thumb = createEl('div', { className: 'thumb-preview' }, [
-      createEl('img', { src: url, className: 'thumb-img' }),
-      createEl('button', { className: 'remove-thumb', innerText: '×', onclick: () => {
-        gallery.splice(i, 1);
-        renderGallery();
-      }})
-    ]);
-    galleryThumbs.appendChild(thumb);
+  pageTitle.addEventListener('input', () => previewTitle.textContent = pageTitle.value.trim() || 'عنوان صفحه');
+  subtitle.addEventListener('input', () => previewSubtitle.textContent = subtitle.value.trim() || 'زیرعنوان / شعار کوتاه');
 
-    const prevThumb = createEl('img', { src: url, className: 'thumb-img me-2 mb-2' });
-    previewGallery.appendChild(prevThumb);
+  // ---------- گالری تصاویر ----------
+  const galleryDropzone = document.getElementById('galleryDropzone');
+  const galleryInput = document.getElementById('galleryInput');
+  const galleryThumbs = document.getElementById('galleryThumbs');
+  const existingGallery = document.getElementById('existingGallery');
+  const previewGallery = document.getElementById('previewGallery').querySelector('.d-flex');
+
+  galleryDropzone.onclick = () => galleryInput.click();
+
+  galleryDropzone.addEventListener('dragover', e => { e.preventDefault(); galleryDropzone.classList.add('dragover'); });
+  galleryDropzone.addEventListener('dragleave', () => galleryDropzone.classList.remove('dragover'));
+  galleryDropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    galleryDropzone.classList.remove('dragover');
+    handleGalleryFiles(e.dataTransfer.files);
   });
 
-  galleryHidden.value = gallery.join(',');
-}
+  galleryInput.addEventListener('change', e => handleGalleryFiles(e.target.files));
 
-renderGallery();
+  function handleGalleryFiles(files) {
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      const objectUrl = URL.createObjectURL(file);
+      galleryItems.push({
+        name: file.name,
+        url: objectUrl,
+        file: file,
+        isNew: true
+      });
+    });
+    renderGallery();
+  }
 
-// مدیریت ویدیوها
-const videoDropzone = document.getElementById('videoDropzone');
-const videoInput = document.getElementById('videoInput');
-const videoThumbs = document.getElementById('videoThumbs');
-const videosHidden = document.getElementById('videosHidden');
-const videoStatus = document.getElementById('videoStatus');
-const previewVideos = document.getElementById('previewVideos').querySelector('.d-flex');
+  function renderGallery() {
+    galleryThumbs.innerHTML = '';
+    previewGallery.innerHTML = '';
 
-videoDropzone.onclick = () => videoInput.click();
+    galleryItems.forEach((item, i) => {
+      const imgUrl = item.isNew ? item.url : getMediaUrl(item.name, 'image');
+      const imgEl = createEl('img', { src: imgUrl, className: 'thumb-img' });
+      const removeBtn = createEl('button', { className: 'remove-thumb', innerText: '×' });
+      removeBtn.addEventListener('click', () => {
+        if (item.isNew && item.url) URL.revokeObjectURL(item.url);
+        galleryItems.splice(i, 1);
+        renderGallery();
+      });
+      const thumb = createEl('div', { className: 'thumb-preview' }, [imgEl, removeBtn]);
+      galleryThumbs.appendChild(thumb);
 
-videoDropzone.addEventListener('dragover', e => {
-  e.preventDefault();
-  videoDropzone.classList.add('dragover');
-});
+      const prevThumb = createEl('img', { src: imgUrl, className: 'thumb-img me-2 mb-2' });
+      previewGallery.appendChild(prevThumb);
+    });
 
-videoDropzone.addEventListener('dragleave', () => videoDropzone.classList.remove('dragover'));
+    // به‌روزرسانی فیلد hidden با نام فایل‌های قدیمی
+    const oldNames = galleryItems.filter(item => !item.isNew).map(item => item.name);
+    existingGallery.value = JSON.stringify(oldNames);
+  }
+  renderGallery();
 
-videoDropzone.addEventListener('drop', e => {
-  e.preventDefault();
-  videoDropzone.classList.remove('dragover');
-  handleVideoFiles(e.dataTransfer.files);
-});
+  // ---------- ویدیوها ----------
+  const videoDropzone = document.getElementById('videoDropzone');
+  const videoInput = document.getElementById('videoInput');
+  const videoThumbs = document.getElementById('videoThumbs');
+  const existingVideos = document.getElementById('existingVideos');
+  const videoStatus = document.getElementById('videoStatus');
+  const previewVideos = document.getElementById('previewVideos').querySelector('.d-flex');
 
-videoInput.addEventListener('change', e => handleVideoFiles(e.target.files));
+  videoDropzone.onclick = () => videoInput.click();
 
-async function handleVideoFiles(files) {
-  for (let file of Array.from(files)) {
-    if (!file.type.startsWith('video/')) continue;
-    if (file.size > 2 * 1024 * 1024 * 1024) {
-      alert('فایل بیش از 2 گیگ است');
-      continue;
+  videoDropzone.addEventListener('dragover', e => { e.preventDefault(); videoDropzone.classList.add('dragover'); });
+  videoDropzone.addEventListener('dragleave', () => videoDropzone.classList.remove('dragover'));
+  videoDropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    videoDropzone.classList.remove('dragover');
+    handleVideoFiles(e.dataTransfer.files);
+  });
+
+  videoInput.addEventListener('change', e => handleVideoFiles(e.target.files));
+
+  function handleVideoFiles(files) {
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('video/')) return;
+      if (file.size > 2 * 1024 * 1024 * 1024) {
+        alert(`فیلم ${file.name} بزرگتر از 2 گیگ است و آپلود نمی‌شود.`);
+        return;
+      }
+      const objectUrl = URL.createObjectURL(file);
+      videoItems.push({
+        name: file.name,
+        url: objectUrl,
+        file: file,
+        isNew: true
+      });
+      videoStatus.textContent = `${videoItems.length} ویدیو آماده آپلود`;
+    });
+    renderVideos();
+  }
+
+  function renderVideos() {
+    videoThumbs.innerHTML = '';
+    previewVideos.innerHTML = '';
+
+    videoItems.forEach((item, i) => {
+      const videoUrl = item.isNew ? item.url : getMediaUrl(item.name, 'video');
+      const videoEl = createEl('video', { src: videoUrl, className: 'thumb-video', controls: true });
+      const removeBtn = createEl('button', { className: 'remove-thumb', innerText: '×' });
+      removeBtn.addEventListener('click', () => {
+        if (item.isNew && item.url) URL.revokeObjectURL(item.url);
+        videoItems.splice(i, 1);
+        renderVideos();
+      });
+      const thumb = createEl('div', { className: 'thumb-preview' }, [videoEl, removeBtn]);
+      videoThumbs.appendChild(thumb);
+
+      const prevThumb = createEl('video', { src: videoUrl, className: 'thumb-video me-2 mb-2', controls: true });
+      previewVideos.appendChild(prevThumb);
+    });
+
+    const oldVideoNames = videoItems.filter(item => !item.isNew).map(item => item.name);
+    existingVideos.value = JSON.stringify(oldVideoNames);
+  }
+  renderVideos();
+
+  // ---------- افراد درگیر ----------
+  const personnelContainer = document.getElementById('personnelContainer');
+  const addPersonBtn = document.getElementById('addPersonBtn');
+  const personnelHidden = document.getElementById('personnelHidden');
+  const previewPersonnel = document.getElementById('previewPersonnel').querySelector('.d-flex');
+
+  function renderPersonnel() {
+    personnelContainer.innerHTML = '';
+    previewPersonnel.innerHTML = '';
+    personnel.forEach((person, i) => {
+      const group = createEl('div', { className: 'person-input-group mb-3' });
+      const nameInput = createEl('input', { type: 'text', className: 'form-control', placeholder: 'نام فرد', value: person.name || '' });
+      const roleInput = createEl('input', { type: 'text', className: 'form-control', placeholder: 'مسئولیت', value: person.role || '' });
+      const deleteBtn = createEl('button', { type: 'button', className: 'btn btn-outline-danger', innerText: 'حذف' });
+      deleteBtn.addEventListener('click', () => {
+        personnel.splice(i, 1);
+        renderPersonnel();
+      });
+      nameInput.addEventListener('input', function() {
+        person.name = this.value;
+        updatePersonnelPreview();
+        personnelHidden.value = JSON.stringify(personnel);
+      });
+      roleInput.addEventListener('input', function() {
+        person.role = this.value;
+        updatePersonnelPreview();
+        personnelHidden.value = JSON.stringify(personnel);
+      });
+      group.appendChild(nameInput);
+      group.appendChild(roleInput);
+      group.appendChild(deleteBtn);
+      personnelContainer.appendChild(group);
+
+      const pill = createEl('span', { className: 'person-pill me-2 mb-2' }, [
+        document.createTextNode(`${person.name || 'نامشخص'} (${person.role || 'نامشخص'})`)
+      ]);
+      previewPersonnel.appendChild(pill);
+    });
+    personnelHidden.value = JSON.stringify(personnel);
+  }
+
+  function updatePersonnelPreview() {
+    previewPersonnel.innerHTML = '';
+    personnel.forEach(person => {
+      const pill = createEl('span', { className: 'person-pill me-2 mb-2' }, [
+        document.createTextNode(`${person.name || 'نامشخص'} (${person.role || 'نامشخص'})`)
+      ]);
+      previewPersonnel.appendChild(pill);
+    });
+  }
+
+  addPersonBtn.onclick = function() {
+    personnel.push({ name: '', role: '' });
+    renderPersonnel();
+    const lastGroup = personnelContainer.lastElementChild;
+    if (lastGroup) {
+      const firstInput = lastGroup.querySelector('input[type="text"]');
+      if (firstInput) firstInput.focus();
+    }
+  };
+  renderPersonnel();
+
+  // ---------- CKEditor ----------
+  let editorInstance;
+  ClassicEditor
+    .create(document.querySelector('#editor'), {
+      language: 'fa',
+      placeholder: 'متن خود را اینجا بنویسید...',
+      simpleUpload: {
+        uploadUrl: "{{ url_for('wiki.upload_file') }}",
+        withCredentials: true
+      },
+      toolbar: [
+        'heading', '|',
+        'bold', 'italic', 'underline', 'link', 'bulletedList', 'numberedList',
+        '|', 'uploadImage', 'mediaEmbed', 'insertTable',
+        '|', 'undo', 'redo'
+      ]
+    })
+    .then(editor => {
+      editorInstance = editor;
+      const preview = document.querySelector('.content-preview');
+      preview.innerHTML = editor.getData() || '<p class="text-muted fst-italic text-center py-5">محتوا اینجا نمایش داده می‌شود...</p>';
+      editor.model.document.on('change:data', () => {
+        preview.innerHTML = editor.getData() || '<p class="text-muted fst-italic text-center py-5">محتوا اینجا نمایش داده می‌شود...</p>';
+      });
+    })
+    .catch(err => console.error(err));
+
+  // ---------- ارسال فرم با AJAX ----------
+  const pageForm = document.getElementById('pageForm');
+  const saveBtn = document.getElementById('saveBtn');
+
+  pageForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // جمع‌آوری داده‌ها
+    const formData = new FormData();
+
+    // فیلدهای متنی
+    formData.append('page_title', pageTitle.value.trim());
+    formData.append('subtitle', subtitle.value.trim());
+    formData.append('tags', tags.join(','));
+    formData.append('personnel', JSON.stringify(personnel));
+    if (editorInstance) {
+      formData.append('content', editorInstance.getData());
     }
 
-    const tempUrl = URL.createObjectURL(file);
-    videos.push(tempUrl);
-    renderVideos();
+    // تصویر شاخص (اگر جدید انتخاب شده باشد)
+    const featureFile = featureInput.files[0];
+    if (featureFile) {
+      formData.append('feature_image', featureFile);
+    }
 
-    videoStatus.textContent = `در حال آپلود ${file.name}...`;
+    // فایل‌های جدید گالری
+    const newGalleryFiles = galleryItems.filter(item => item.isNew && item.file).map(item => item.file);
+    newGalleryFiles.forEach(file => {
+      formData.append('gallery_images[]', file);
+    });
 
-    // در اینجا فقط پیش‌نمایش نشان داده می‌شود
-    // اگر می‌خواهید واقعاً آپلود شود، باید endpointهای chunk را در بک‌اند داشته باشید
-  }
-}
+    // نام فایل‌های قدیمی گالری
+    const oldGalleryNames = galleryItems.filter(item => !item.isNew).map(item => item.name);
+    formData.append('existing_gallery', JSON.stringify(oldGalleryNames));
 
-function renderVideos() {
-  videoThumbs.innerHTML = '';
-  previewVideos.innerHTML = '';
+    // فایل‌های جدید ویدیو
+    const newVideoFiles = videoItems.filter(item => item.isNew && item.file).map(item => item.file);
+    newVideoFiles.forEach(file => {
+      formData.append('videos[]', file);
+    });
 
-  videos.forEach((url, i) => {
-    const thumb = createEl('div', { className: 'thumb-preview' }, [
-      createEl('video', { src: url, className: 'thumb-video', controls: true }),
-      createEl('button', { className: 'remove-thumb', innerText: '×', onclick: () => {
-        videos.splice(i, 1);
-        renderVideos();
-      }})
-    ]);
-    videoThumbs.appendChild(thumb);
+    // نام فایل‌های قدیمی ویدیو
+    const oldVideoNames = videoItems.filter(item => !item.isNew).map(item => item.name);
+    formData.append('existing_videos', JSON.stringify(oldVideoNames));
 
-    const prevThumb = createEl('video', { src: url, className: 'thumb-video me-2 mb-2', controls: true });
-    previewVideos.appendChild(prevThumb);
+    // غیرفعال کردن دکمه
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> در حال ذخیره...';
+
+    try {
+      const response = await fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+
+      // اگر سرور ریدایرکت کرد (موفقیت)
+      if (response.redirected) {
+        window.location.href = response.url;
+        return;
+      }
+
+      // تلاش برای خواندن JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        if (data.success && data.url) {
+          window.location.href = data.url;
+        } else {
+          alert(data.error || 'خطا در ذخیره صفحه');
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="bi bi-save me-2"></i> ذخیره صفحه';
+        }
+      } else {
+        // اگر پاسخ HTML است (احتمالاً خطا)
+        const text = await response.text();
+        console.error('Unexpected response:', text);
+        alert('خطای غیرمنتظره از سرور');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="bi bi-save me-2"></i> ذخیره صفحه';
+      }
+    } catch (err) {
+      console.error(err);
+      alert('خطا در ارتباط با سرور');
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="bi bi-save me-2"></i> ذخیره صفحه';
+    }
   });
-
-  videosHidden.value = videos.join(',');
-}
-
-renderVideos();
-
-// مدیریت افراد درگیر – نسخه نهایی بدون مشکل فوکوس و دکمه افزودن کار می‌کند
-const personnelContainer = document.getElementById('personnelContainer');
-const addPersonBtn = document.getElementById('addPersonBtn');
-const personnelHidden = document.getElementById('personnelHidden');
-const previewPersonnel = document.getElementById('previewPersonnel').querySelector('.d-flex');
-
-function renderPersonnel() {
-  personnelContainer.innerHTML = '';
-  previewPersonnel.innerHTML = '';
-
-  personnel.forEach((person, i) => {
-    const group = createEl('div', { className: 'person-input-group mb-3' });
-
-    const nameInput = createEl('input', {
-      type: 'text',
-      className: 'form-control',
-      placeholder: 'نام فرد',
-      value: person.name || ''
-    });
-
-    const roleInput = createEl('input', {
-      type: 'text',
-      className: 'form-control',
-      placeholder: 'مسئولیت',
-      value: person.role || ''
-    });
-
-    const deleteBtn = createEl('button', {
-      type: 'button',
-      className: 'btn btn-outline-danger',
-      innerText: 'حذف'
-    });
-
-    // حذف فرد
-    deleteBtn.onclick = () => {
-      personnel.splice(i, 1);
-      renderPersonnel();
-    };
-
-    // به‌روزرسانی بدون رندر مجدد کل لیست
-    nameInput.oninput = function() {
-      person.name = this.value;
-      updatePersonnelPreview();
-      personnelHidden.value = JSON.stringify(personnel);
-    };
-
-    roleInput.oninput = function() {
-      person.role = this.value;
-      updatePersonnelPreview();
-      personnelHidden.value = JSON.stringify(personnel);
-    };
-
-    group.appendChild(nameInput);
-    group.appendChild(roleInput);
-    group.appendChild(deleteBtn);
-    personnelContainer.appendChild(group);
-
-    // پیش‌نمایش
-    const pill = createEl('span', { className: 'person-pill me-2 mb-2' }, [
-      document.createTextNode(`${person.name || 'نامشخص'} (${person.role || 'نامشخص'})`)
-    ]);
-    previewPersonnel.appendChild(pill);
-  });
-}
-
-function updatePersonnelPreview() {
-  previewPersonnel.innerHTML = '';
-
-  personnel.forEach(person => {
-    const pill = createEl('span', { className: 'person-pill me-2 mb-2' }, [
-      document.createTextNode(`${person.name || 'نامشخص'} (${person.role || 'نامشخص'})`)
-    ]);
-    previewPersonnel.appendChild(pill);
-  });
-}
-
-addPersonBtn.onclick = function() {
-  personnel.push({ name: '', role: '' });
-  renderPersonnel();
-  // فوکوس روی آخرین فیلد نام
-  const lastGroup = personnelContainer.lastElementChild;
-  if (lastGroup) {
-    lastGroup.querySelector('input[type="text"]:first-child').focus();
-  }
-};
-
-renderPersonnel();
-
-// CKEditor + همگام‌سازی محتوا
-ClassicEditor
-  .create(document.querySelector('#editor'), {
-    language: 'fa',
-    simpleUpload: {
-      uploadUrl: "{{ url_for('wiki.upload_file') }}",
-      withCredentials: true
-    },
-    toolbar: [
-      'heading', '|',
-      'bold', 'italic', 'underline', 'link', 'bulletedList', 'numberedList',
-      '|', 'uploadImage', 'mediaEmbed', 'insertTable',
-      '|', 'undo', 'redo'
-    ]
-  })
-  .then(editor => {
-    editor.model.document.on('change:data', () => {
-      document.querySelector('.content-preview').innerHTML = editor.getData() ||
-        '<p class="text-muted fst-italic text-center py-5">محتوا اینجا نمایش داده می‌شود...</p>';
-    });
-  })
-  .catch(err => console.error(err));
-
-// انیمیشن دکمه ذخیره
-document.getElementById('pageForm').addEventListener('submit', function(e) {
-  const btn = document.getElementById('saveBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> در حال ذخیره...';
-});
+})();
 </script>
 {% endblock %}

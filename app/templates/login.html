@@ -1,39 +1,157 @@
 {% extends "base.html" %}
-{% block title %}ورود{% endblock %}
+
+{% block title %}ورود | Azin{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-5">
-    <div class="card shadow">
-      <div class="card-body p-4">
-        <h3 class="mb-4">ورود</h3>
-
-        <form method="POST" action="{{ url_for('login') }}">
-          {# اگر آدرس بازگشتی (next) وجود دارد، آن را حفظ کن #}
-          {% if request.args.get('next') %}
-            <input type="hidden" name="next" value="{{ request.args.get('next') }}">
-          {% endif %}
-
-          <div class="mb-3">
-            <label class="form-label">نام کاربری</label>
-            <input name="username" class="form-control" required autofocus>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">رمز عبور</label>
-            <input name="password" type="password" class="form-control" required>
-          </div>
-
-          <div class="d-grid">
-            <button class="btn btn-primary">ورود</button>
-          </div>
-        </form>
-
-        <div class="mt-3 text-center small">
-          هنوز عضو نشده‌اید؟ <a href="{{ url_for('register') }}">ثبت‌نام</a>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <!-- کارت اصلی با افکت شیشه‌ای و انیمیشن -->
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden" data-aos="fade-up" data-aos-duration="800">
+        <!-- هدر کارت با رنگ primary -->
+        <div class="card-header bg-primary text-white text-center py-4 border-0">
+          <h3 class="fw-bold mb-0">
+            <i class="bi bi-box-arrow-in-right me-2"></i>ورود به حساب
+          </h3>
+          <p class="text-white-50 small mt-2">خوش آمدید! لطفاً وارد شوید</p>
         </div>
+
+        <!-- بدنه کارت -->
+        <div class="card-body p-4 p-lg-5 bg-white">
+          <form method="POST" action="{{ url_for('login') }}">
+            <!-- حفظ پارامتر next در صورت وجود -->
+            {% if request.args.get('next') %}
+              <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+            {% endif %}
+
+            <!-- فیلد نام کاربری -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold text-secondary">
+                <i class="bi bi-person me-1 text-primary"></i>نام کاربری
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-0">
+                  <i class="bi bi-person text-primary"></i>
+                </span>
+                <input name="username" class="form-control form-control-lg bg-light border-0"
+                       placeholder="نام کاربری خود را وارد کنید" required autofocus>
+              </div>
+            </div>
+
+            <!-- فیلد رمز عبور -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold text-secondary">
+                <i class="bi bi-lock me-1 text-primary"></i>رمز عبور
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border-0">
+                  <i class="bi bi-lock text-primary"></i>
+                </span>
+                <input name="password" type="password" class="form-control form-control-lg bg-light border-0"
+                       placeholder="رمز عبور خود را وارد کنید" required>
+              </div>
+            </div>
+
+            <!-- دکمه ورود با افکت hover -->
+            <div class="d-grid gap-2 mt-5">
+              <button type="submit" class="btn btn-primary btn-lg rounded-pill py-3 hover-scale">
+                <i class="bi bi-box-arrow-in-right me-2"></i>ورود
+              </button>
+            </div>
+          </form>
+
+          <!-- لینک‌های کمکی -->
+          <div class="mt-4 text-center">
+            <span class="text-muted">عضو نیستید؟</span>
+            <a href="{{ url_for('register') }}" class="text-primary text-decoration-none fw-semibold me-2">ثبت‌نام کنید</a>
+            <br>
+            {% if endpoint_exists('reset_password') %}
+            <small class="text-muted">
+              <a href="{{ url_for('reset_password') }}" class="text-decoration-none">رمز خود را فراموش کرده‌اید؟</a>
+            </small>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- لینک بازگشت به خانه -->
+      <div class="text-center mt-4">
+        <a href="{{ url_for('wiki.index') }}" class="text-muted text-decoration-none small">
+          <i class="bi bi-arrow-right me-1"></i>بازگشت به صفحه اصلی
+        </a>
       </div>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+  /* استایل‌های سفارشی برای صفحه ورود */
+  .hover-scale {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-scale:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 25px rgba(13, 110, 253, 0.4) !important;
+  }
+
+  /* استایل input-group با افکت focus */
+  .input-group-text {
+    border-radius: 12px 0 0 12px;
+    transition: all 0.2s ease;
+  }
+  .form-control {
+    border-radius: 0 12px 12px 0;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+  }
+  .form-control:focus {
+    box-shadow: none;
+    background-color: #fff !important;
+    border: 2px solid var(--primary) !important;
+    border-left: none !important;
+  }
+  .input-group:focus-within .input-group-text {
+    background-color: #fff !important;
+    border: 2px solid var(--primary) !important;
+    border-right: none !important;
+    color: var(--primary);
+  }
+
+  /* استایل کارت */
+  .card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* استایل لینک‌ها */
+  a {
+    transition: color 0.2s ease;
+  }
+  a:hover {
+    color: var(--primary-dark) !important;
+  }
+
+  /* responsive */
+  @media (max-width: 576px) {
+    .card-body {
+      padding: 2rem 1.5rem !important;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // فعال‌سازی AOS (اگر در base.html نباشد)
+  if (typeof AOS !== 'undefined') {
+    AOS.init({
+      duration: 800,
+      once: true,
+      easing: 'ease-in-out'
+    });
+  }
+</script>
 {% endblock %}

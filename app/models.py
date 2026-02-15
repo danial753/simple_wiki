@@ -1,7 +1,7 @@
 # FILE: app/models.py
 from datetime import datetime
 import json
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from flask_login import UserMixin
 from sqlalchemy import ForeignKey, text
@@ -9,12 +9,8 @@ from sqlalchemy.orm import relationship, backref
 
 from .extensions import db
 
-# ---------------- MODELS ----------------
+
 class User(db.Model, UserMixin):
-    """
-    مدل کاربر — ارث‌بری از UserMixin ویژگی‌های مورد نیاز flask-login
-    را فراهم می‌کند: is_authenticated, is_active, is_anonymous, get_id()
-    """
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -39,31 +35,67 @@ class Page(db.Model):
     title = db.Column(db.String(255))
     subtitle = db.Column(db.String(512))
     excerpt = db.Column(db.Text)
-    tags = db.Column(db.String(1000))
+    tags = db.Column(db.String(1000))          # comma-separated or JSON
     feature_image = db.Column(db.String(255))
-    gallery = db.Column(db.Text)   # JSON list
-    videos = db.Column(db.Text)    # JSON list
-    personnel = db.Column(db.Text) # JSON list
+    gallery = db.Column(db.Text)               # JSON list of filenames
+    videos = db.Column(db.Text)                # JSON list of filenames
+    personnel = db.Column(db.Text)             # JSON list of dicts
+    content = db.Column(db.Text)               # محتوای اصلی (Markdown/HTML)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # ────────────────────────────────────────────────
+    # متدهای امن برای گرفتن داده‌ها (با مدیریت خطا)
+    # ────────────────────────────────────────────────
     def get_gallery(self) -> List[str]:
+        """برگرداندن لیست مسیر فایل‌های گالری"""
+        if not self.gallery:
+            return []
         try:
-            return json.loads(self.gallery) if self.gallery else []
-        except Exception:
+            return json.loads(self.gallery)
+        except (json.JSONDecodeError, TypeError, ValueError):
             return []
 
     def get_videos(self) -> List[str]:
+        """برگرداندن لیست مسیر فایل‌های ویدیو"""
+        if not self.videos:
+            return []
         try:
-            return json.loads(self.videos) if self.videos else []
+            return json.loads(self.videos)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return []
+
+    def get_personnel(self) -> List[Dict[str, Any]]:
+        """برگرداندن لیست افراد درگیر (هر کدام یک دیکشنری)"""
+        if not self.personnel:
+            return []
+        try:
+            data = json.loads(self.personnel)
+            # اطمینان از اینکه لیست دیکشنری است
+            if isinstance(data, list):
+                return [
+                    item if isinstance(item, dict) else {}
+                    for item in data
+                ]
+            return []
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return []
+
+    def get_tags_list(self) -> List[str]:
+        """برگرداندن لیست تگ‌ها به صورت امن"""
+        if not self.tags:
+            return []
+        try:
+            # اگر به صورت JSON ذخیره شده
+            if self.tags.startswith('['):
+                return json.loads(self.tags)
+            # اگر comma-separated است (فرمت قدیمی)
+            return [t.strip() for t in self.tags.split(',') if t.strip()]
         except Exception:
             return []
 
-    def get_personnel(self) -> List[dict]:
-        try:
-            return json.loads(self.personnel) if self.personnel else []
-        except Exception:
-            return []
+    def __repr__(self):
+        return f"<Page {self.slug} ({self.title or 'بدون عنوان'})>"
 
 
 class Comment(db.Model):
@@ -85,63 +117,44 @@ class Comment(db.Model):
         return f"<Comment {self.id} by user {self.user_id} on page {self.page}>"
 
 
-# ---------------- HELPERS ----------------
-def get_user_by_id(user_id: Optional[str]):
-    """
-    Helper for Flask-Login user_loader.
-    Accepts str or int and returns a User or None.
-    """
+# ────────────────────────────────────────────────
+# Helper functions
+# ────────────────────────────────────────────────
+def get_user_by_id(user_id: Optional[str]) -> Optional[User]:
     if not user_id:
         return None
     try:
         uid = int(user_id)
+        return db.session.get(User, uid)
     except Exception:
-        return None
-    try:
-        # SQLAlchemy 1.4+: session.get is preferred
-        try:
-            return db.session.get(User, uid)
-        except Exception:
-            return db.session.query(User).get(uid)
-    except Exception:
-        db.session.rollback()
         return None
 
 
 def ensure_page_columns():
     """
-    سازگاری با اسکیمای قدیمی: اگر از SQLite استفاده می‌شود و ستون‌های اختیاری
-    وجود ندارند، در اینجا اضافه می‌شوند.
-    این تابع صرفاً یک کمک‌افزاری است؛ اگر از Alembic یا migration tool استفاده می‌کنید،
-    نیازی به آن نیست.
+    فقط برای سازگاری با دیتابیس‌های قدیمی (SQLite بدون migration)
+    در پروژه‌های واقعی بهتره از Flask-Migrate / Alembic استفاده بشه
     """
     try:
         inspector = db.inspect(db.engine)
         if 'page' not in inspector.get_table_names():
             return
+
         rows = db.session.execute(text("PRAGMA table_info('page')")).fetchall()
         existing = {row[1] for row in rows}
+
         alters = []
-        if 'subtitle' not in existing:
-            alters.append("ALTER TABLE page ADD COLUMN subtitle TEXT")
-        if 'gallery' not in existing:
-            alters.append("ALTER TABLE page ADD COLUMN gallery TEXT")
-        if 'videos' not in existing:
-            alters.append("ALTER TABLE page ADD COLUMN videos TEXT")
-        if 'personnel' not in existing:
-            alters.append("ALTER TABLE page ADD COLUMN personnel TEXT")
+        for col in ['subtitle', 'excerpt', 'tags', 'feature_image', 'gallery', 'videos', 'personnel', 'content']:
+            if col not in existing:
+                alters.append(f"ALTER TABLE page ADD COLUMN {col} TEXT")
+
         if alters:
             with db.engine.begin() as conn:
-                for sql_stmt in alters:
+                for stmt in alters:
                     try:
-                        conn.execute(text(sql_stmt))
-                    except Exception:
-                        # ignore failures but log them
-                        db.session.rollback()
-    except Exception:
-        # nothing fatal — فقط لاگ کن
-        try:
-            import logging
-            logging.getLogger(__name__).exception("ensure_page_columns failed")
-        except Exception:
-            pass
+                        conn.execute(text(stmt))
+                    except Exception as e:
+                        print(f"خطا در اضافه کردن ستون: {e}")
+                        # rollback خودکار انجام می‌شود
+    except Exception as e:
+        print(f"خطا در ensure_page_columns: {e}")

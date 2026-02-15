@@ -1,47 +1,208 @@
 {% extends "base.html" %}
-{% block title %}مدیریت کاربران{% endblock %}
+
+{% block title %}مدیریت کاربران | Azin.teb{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h4 class="mb-0">مدیریت کاربران</h4>
-  <a class="btn btn-success btn-sm" href="{{ url_for('admin_user_new') }}">اضافه کردن کاربر</a>
+<div class="container py-4" data-aos="fade-up">
+  <!-- هدر با دکمه اضافه کردن کاربر -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold text-dark mb-2 mb-sm-0">
+      <i class="bi bi-people-fill me-2 text-primary"></i>
+      مدیریت کاربران
+    </h4>
+    <a class="btn btn-success rounded-pill px-4 py-2 shadow-sm hover-scale" href="{{ url_for('admin_user_new') }}">
+      <i class="bi bi-plus-lg me-2"></i>افزودن کاربر جدید
+    </a>
+  </div>
+
+  <!-- فرم جستجو -->
+  <div class="row mb-4" data-aos="fade-up" data-aos-delay="50">
+    <div class="col-md-6">
+      <form class="d-flex" action="{{ url_for('admin_users') }}" method="GET">
+        <div class="input-group shadow-sm">
+          <input name="search" class="form-control form-control-lg border-0 bg-light" placeholder="جستجو با نام کاربری، ایمیل یا نقش..." value="{{ search_query }}" aria-label="جستجو">
+          <button class="btn btn-primary px-4" type="submit">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- کارت اصلی جدول کاربران -->
+  <div class="card border-0 shadow-lg rounded-4 overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="bg-light">
+          <tr>
+            <th class="py-3 pe-4 fw-semibold text-secondary">ID</th>
+            <th class="py-3 fw-semibold text-secondary">کاربر</th>
+            <th class="py-3 fw-semibold text-secondary">نام کامل</th>
+            <th class="py-3 fw-semibold text-secondary">ایمیل</th>
+            <th class="py-3 fw-semibold text-secondary">نقش</th>
+            <th class="py-3 ps-4 fw-semibold text-secondary">اقدامات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users.items %}
+          <tr id="user-{{ user.id }}" class="border-bottom hover-lift">
+            <td class="pe-4 fw-medium">{{ user.id }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="avatar-wrapper">
+                  {% set avatar_path = user.avatar if user.avatar else 'default_avatar.png' %}
+                  <img src="{{ url_for('static', filename='images/' + avatar_path) if user.avatar else url_for('static', filename='images/default_avatar.png') }}"
+                       class="rounded-circle border border-2 border-primary object-fit-cover"
+                       width="40" height="40" alt="{{ user.username }}"
+                       onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default_avatar.png') }}'">
+                </div>
+                <span class="fw-semibold">{{ user.username }}</span>
+              </div>
+            </td>
+            <td>{{ user.full_name or '—' }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+              <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill">{{ user.role }}</span>
+            </td>
+            <td class="ps-4">
+              <div class="d-flex gap-2">
+                <a class="btn btn-sm btn-outline-primary rounded-circle hover-scale" href="{{ url_for('admin_user_edit', user_id=user.id) }}" title="ویرایش">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <form action="{{ url_for('admin_user_delete', user_id=user.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('آیا از حذف این کاربر اطمینان دارید؟ این عمل غیرقابل بازگشت است.');">
+                  <button class="btn btn-sm btn-outline-danger rounded-circle hover-scale" type="submit" title="حذف">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- صفحه‌بندی (Pagination) -->
+  {% if users.pages > 1 %}
+  <nav class="mt-5" aria-label="صفحه‌بندی کاربران" data-aos="fade-up">
+    <ul class="pagination justify-content-center">
+      {% if users.has_prev %}
+      <li class="page-item">
+        <a class="page-link rounded-pill mx-1 px-3" href="{{ url_for('admin_users', page=users.prev_num, search=search_query) }}" aria-label="قبلی">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+      {% endif %}
+
+      {% for p in users.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+          <li class="page-item {% if p == users.page %}active{% endif %}">
+            <a class="page-link rounded-pill mx-1 px-3" href="{{ url_for('admin_users', page=p, search=search_query) }}">{{ p }}</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link rounded-pill mx-1 px-3">…</span></li>
+        {% endif %}
+      {% endfor %}
+
+      {% if users.has_next %}
+      <li class="page-item">
+        <a class="page-link rounded-pill mx-1 px-3" href="{{ url_for('admin_users', page=users.next_num, search=search_query) }}" aria-label="بعدی">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
 </div>
+{% endblock %}
 
-<form class="d-flex mb-3" action="{{ url_for('admin_users') }}" method="GET">
-  <input name="search" class="form-control me-2" placeholder="جستجو کاربران" value="{{ search_query }}">
-  <button class="btn btn-outline-primary" type="submit">جستجو</button>
-</form>
+{% block extra_styles %}
+<style>
+  /* استایل‌های مخصوص صفحه مدیریت کاربران */
+  .bg-primary-soft {
+    background: rgba(13, 110, 253, 0.12);
+  }
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    background: #fafcff !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  .hover-scale {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-scale:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .table th {
+    border-top: none;
+    border-bottom: 2px solid var(--primary-soft);
+  }
+  .table td {
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+    padding: 1rem 0.5rem;
+  }
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .page-link {
+    border: none;
+    background: transparent;
+    color: var(--text-dark);
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  .page-link:hover {
+    background: var(--primary-soft);
+    color: var(--primary);
+    transform: translateY(-2px);
+  }
+  .page-item.active .page-link {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 10px rgba(13,110,253,0.3);
+  }
+  .avatar-wrapper {
+    position: relative;
+    width: 40px;
+    height: 40px;
+  }
+  .avatar-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    background: #28a745;
+    border-radius: 50%;
+    border: 2px solid white;
+    display: block;
+  }
+  .form-control:focus {
+    box-shadow: 0 0 0 4px rgba(13,110,253,0.15);
+    border-color: transparent;
+  }
+</style>
+{% endblock %}
 
-<table class="table table-striped">
-  <thead>
-    <tr><th>ID</th><th>نام کاربری</th><th>نام کامل</th><th>ایمیل</th><th>نقش</th><th>اقدامات</th></tr>
-  </thead>
-  <tbody>
-    {% for user in users.items %}
-      <tr id="user-{{ user.id }}">
-        <td>{{ user.id }}</td>
-        <td>{{ user.username }}</td>
-        <td>{{ user.full_name or '' }}</td>
-        <td>{{ user.email }}</td>
-        <td>{{ user.role }}</td>
-        <td>
-          <a class="btn btn-sm btn-primary" href="{{ url_for('admin_user_edit', user_id=user.id) }}">ویرایش</a>
-          <form action="{{ url_for('admin_user_delete', user_id=user.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('آیا حذف شود؟');">
-            <button class="btn btn-sm btn-danger">حذف</button>
-          </form>
-        </td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<nav>
-  <ul class="pagination">
-    {% if users.has_prev %}<li class="page-item"><a class="page-link" href="{{ url_for('admin_users', page=users.prev_num, search=search_query) }}">قبلی</a></li>{% endif %}
-    {% for p in users.iter_pages() %}
-      {% if p %}<li class="page-item {% if p==users.page %}active{% endif %}"><a class="page-link" href="{{ url_for('admin_users', page=p, search=search_query) }}">{{ p }}</a></li>{% else %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
-    {% endfor %}
-    {% if users.has_next %}<li class="page-item"><a class="page-link" href="{{ url_for('admin_users', page=users.next_num, search=search_query) }}">بعدی</a></li>{% endif %}
-  </ul>
-</nav>
+{% block extra_scripts %}
+<script>
+  (function() {
+    // فعال‌سازی tooltip برای دکمه‌ها (اختیاری)
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl, { placement: 'top' })
+    });
+  })();
+</script>
 {% endblock %}
