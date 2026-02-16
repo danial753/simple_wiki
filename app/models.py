@@ -44,9 +44,13 @@ class Page(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # ────────────────────────────────────────────────
+    # ─────────── فیلد جدید برای مشخص کردن سازنده صفحه ───────────
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    user = db.relationship('User', backref='pages')
+
+    # ─────────────────────────────────────────────────────────
     # متدهای امن برای گرفتن داده‌ها (با مدیریت خطا)
-    # ────────────────────────────────────────────────
+    # ─────────────────────────────────────────────────────────
     def get_gallery(self) -> List[str]:
         """برگرداندن لیست مسیر فایل‌های گالری"""
         if not self.gallery:

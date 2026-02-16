@@ -291,7 +291,7 @@ def edit_page(page_slug: Optional[str] = None):
         return redirect(url_for('wiki.index'))
 
     is_new = page_slug is None or page_slug == 'new'
-    page = None
+    page = None  # این متغیر برای ذخیره‌ی شیء Page از دیتابیس استفاده می‌شود
 
     # مقادیر پیش‌فرض
     title = ""
@@ -306,6 +306,35 @@ def edit_page(page_slug: Optional[str] = None):
 
     # بارگذاری صفحه موجود (اگر ویرایش باشد)
     if not is_new:
+        # ابتدا از دیتابیس
+        if Page is not None:
+            try:
+                p = Page.query.filter_by(slug=page_slug).first()
+                if p:
+                    page = p
+                    title = p.title or title
+                    subtitle = p.subtitle or subtitle
+                    excerpt = p.excerpt or excerpt
+                    tags = p.tags or tags
+                    feature_image = p.feature_image or feature_image
+                    gallery = p.get_gallery() or gallery
+                    videos = p.get_videos() or videos
+                    personnel = p.get_personnel() or personnel
+                    content = p.content or content
+            except Exception:
+                current_app.logger.exception("خطا در لود متادیتا از دیتابیس")
+
+        # ---- اعمال محدودیت برای ویرایشگران ----
+        if page and current_user.role == 'editor' and page.user_id != current_user.id:
+            flash('شما فقط می‌توانید صفحاتی را که خودتان ایجاد کرده‌اید ویرایش کنید.', 'danger')
+            return redirect(url_for('wiki.view_page', page_name=page_slug))
+
+        # اگر صفحه در دیتابیس نبود (صفحه قدیمی) و کاربر ویرایشگر است، دسترسی نداشته باشد
+        if not page and current_user.role == 'editor':
+            flash('ویرایش صفحات قدیمی فقط توسط ادمین امکان‌پذیر است.', 'danger')
+            return redirect(url_for('wiki.view_page', page_name=page_slug))
+
+        # بارگذاری از فایل (برای صفحات قدیمی که در دیتابیس نیستند)
         path = _page_file_path(page_slug)
         if os.path.exists(path):
             try:
@@ -353,24 +382,6 @@ def edit_page(page_slug: Optional[str] = None):
                 title = m2.group(1).strip() if m2 else title
             except Exception:
                 current_app.logger.exception("خطا در خواندن فایل صفحه موجود")
-
-        # Overlay با دیتابیس (اولویت بالاتر)
-        if Page is not None:
-            try:
-                p = Page.query.filter_by(slug=page_slug).first()
-                if p:
-                    page = p
-                    title = p.title or title
-                    subtitle = p.subtitle or subtitle
-                    excerpt = p.excerpt or excerpt
-                    tags = p.tags or tags
-                    feature_image = p.feature_image or feature_image
-                    gallery = p.get_gallery() or gallery
-                    videos = p.get_videos() or videos
-                    personnel = p.get_personnel() or personnel
-                    content = p.content or content
-            except Exception:
-                current_app.logger.exception("خطا در لود متادیتا از دیتابیس")
 
     # پردازش POST (ذخیره)
     if request.method == 'POST':
@@ -479,6 +490,13 @@ def edit_page(page_slug: Optional[str] = None):
                     if not p:
                         p = Page(slug=new_slug)
                         db.session.add(p)
+                        p.user_id = current_user.id  # ثبت سازنده برای صفحه جدید
+                    else:
+                        # اگر صفحه موجود است و کاربر ویرایشگر است و مالک نیست، اجازه نده
+                        if current_user.role == 'editor' and p.user_id != current_user.id:
+                            flash('شما اجازه ویرایش این صفحه را ندارید.', 'danger')
+                            return redirect(url_for('wiki.view_page', page_name=new_slug))
+
                     p.title = title
                     p.subtitle = subtitle
                     p.excerpt = excerpt
@@ -701,25 +719,102 @@ def api_page_save():
 @wiki_bp.route('/api/page/delete', methods=['POST'], endpoint='api_page_delete')
 @login_required
 def api_page_delete():
+    """
+    حذف یک صفحه و تمام منابع مرتبط با آن (فایل HTML، تصاویر گالری، ویدیوها و کامنت‌ها).
+    فقط کاربران با نقش admin مجاز به این عملیات هستند.
+    """
+    # بررسی سطح دسترسی
     if getattr(current_user, 'role', 'user') != 'admin':
-        return jsonify({'success': False, 'error': 'forbidden'}), 403
+        return jsonify({'success': False, 'error': 'دسترسی غیرمجاز'}), 403
+
+    # دریافت slug از درخواست (JSON یا form-data)
     data = request.get_json(force=True, silent=True) or {}
     slug = data.get('slug') or request.form.get('slug')
     if not slug:
-        return jsonify({'success': False, 'error': 'slug required'}), 400
-    path = _page_file_path(slug)
+        return jsonify({'success': False, 'error': 'slug مورد نیاز است'}), 400
+
+    # مسیر فایل HTML صفحه
+    html_path = _page_file_path(slug)
+
     try:
-        if os.path.exists(path):
-            os.remove(path)
+        # پیدا کردن صفحه در دیتابیس
+        page = None
         if Page is not None:
-            p = Page.query.filter_by(slug=slug).first()  # type: ignore
-            if p:
-                db.session.delete(p)  # type: ignore
-                db.session.commit()  # type: ignore
-        return jsonify({'success': True})
+            page = Page.query.filter_by(slug=slug).first()
+
+        if not page:
+            return jsonify({'success': False, 'error': 'صفحه یافت نشد'}), 404
+
+        # استخراج لیست فایل‌های رسانه‌ای (گالری و ویدیو)
+        gallery_files = page.get_gallery() or []
+        videos_files = page.get_videos() or []
+
+        # ---- 1. حذف فایل‌های تصاویر گالری از دیسک ----
+        for fname in gallery_files:
+            try:
+                # مسیر کامل فایل تصویر در پوشه آپلود
+                file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], fname)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    current_app.logger.info(f"فایل گالری {fname} با موفقیت حذف شد.")
+                else:
+                    current_app.logger.warning(f"فایل گالری {fname} وجود ندارد.")
+            except Exception as e:
+                # اگر در حذف یک فایل خطا رخ داد، کل عملیات را متوقف می‌کنیم
+                current_app.logger.error(f"خطا در حذف فایل گالری {fname}: {e}")
+                return jsonify({'success': False, 'error': f'خطا در حذف فایل {fname}'}), 500
+
+        # ---- 2. حذف فایل‌های ویدیو از دیسک ----
+        for fname in videos_files:
+            try:
+                file_path = os.path.join(_paths()['VIDEO_FOLDER'], fname)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    current_app.logger.info(f"فایل ویدیو {fname} با موفقیت حذف شد.")
+                else:
+                    current_app.logger.warning(f"فایل ویدیو {fname} وجود ندارد.")
+            except Exception as e:
+                current_app.logger.error(f"خطا در حذف فایل ویدیو {fname}: {e}")
+                return jsonify({'success': False, 'error': f'خطا در حذف فایل {fname}'}), 500
+
+        # ---- 3. حذف کامنت‌های مربوط به این صفحه از دیتابیس ----
+        try:
+            if Comment is not None:
+                # حذف تمام کامنت‌هایی که page آن برابر slug است
+                Comment.query.filter_by(page=slug).delete(synchronize_session=False)
+                current_app.logger.info(f"کامنت‌های صفحه {slug} حذف شدند.")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"خطا در حذف کامنت‌های صفحه {slug}: {e}")
+            return jsonify({'success': False, 'error': 'خطا در حذف کامنت‌ها'}), 500
+
+        # ---- 4. حذف رکورد صفحه از دیتابیس ----
+        try:
+            db.session.delete(page)
+            db.session.commit()
+            current_app.logger.info(f"صفحه {slug} از دیتابیس حذف شد.")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"خطا در حذف صفحه {slug} از دیتابیس: {e}")
+            return jsonify({'success': False, 'error': 'خطا در حذف صفحه از دیتابیس'}), 500
+
+        # ---- 5. حذف فایل HTML صفحه از دیسک ----
+        try:
+            if os.path.exists(html_path):
+                os.remove(html_path)
+                current_app.logger.info(f"فایل HTML صفحه {slug} حذف شد.")
+            else:
+                current_app.logger.warning(f"فایل HTML صفحه {slug} وجود ندارد.")
+        except Exception as e:
+            # حذف فایل HTML اگر با خطا مواجه شود، فقط لاگ می‌کنیم (چون صفحه از دیتابیس حذف شده)
+            current_app.logger.error(f"خطا در حذف فایل HTML صفحه {slug}: {e}")
+
+        return jsonify({'success': True, 'message': 'صفحه و تمام منابع مرتبط با موفقیت حذف شدند.'})
+
     except Exception as e:
-        current_app.logger.exception("api_page_delete failed")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        db.session.rollback()
+        current_app.logger.exception("خطای غیرمنتظره در api_page_delete")
+        return jsonify({'success': False, 'error': 'خطای داخلی سرور'}), 500
 
 
 # -------------------- CKEditor upload (single-file) --------------------
