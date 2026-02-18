@@ -7,94 +7,117 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <div class="row g-4">
+<!-- هدر بزرگ با جستجو -->
+<section class="discover-hero text-white py-5" style="background: linear-gradient(145deg, #0d6efd, #0a58ca); border-radius: 0 0 4rem 4rem;">
+  <div class="container py-5">
+    <div class="row justify-content-center text-center">
+      <div class="col-lg-8" data-aos="fade-up">
+        <h1 class="display-4 fw-bold mb-4">کاوش در دانش پزشکی</h1>
+        <p class="lead mb-5">جستجو میان مقالات، منابع و نوشته‌های تخصصی</p>
+        <form action="{{ url_for('discover') }}" method="get" class="d-flex search-form">
+          <input type="text" name="q" class="form-control form-control-lg rounded-pill me-2" placeholder="عبارت مورد نظر را وارد کنید..." value="{{ q|e }}" aria-label="جستجو">
+          <button class="btn btn-light btn-lg rounded-pill px-5 hover-scale" type="submit">
+            <i class="bi bi-search me-2"></i>جستجو
+          </button>
+        </form>
+        {% if tag_filter %}
+          <div class="mt-4">
+            <span class="badge bg-white text-primary rounded-pill px-4 py-2 fs-6">
+              <i class="bi bi-tag me-1"></i>برچسب: {{ tag_filter }}
+            </span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container py-5">
+  <div class="row g-5">
     <!-- ستون اصلی نتایج -->
     <div class="col-lg-8">
-      <!-- هدر بخش کاوش -->
-      <div class="d-flex flex-wrap justify-content-between align-items-center mb-4" data-aos="fade-down">
-        <div>
-          <h4 class="fw-bold text-dark mb-1">
-            <i class="bi bi-compass me-2 text-primary"></i>کاوش
-          </h4>
-          {% if q %}
-            <div class="text-muted small">
-              <i class="bi bi-search me-1"></i>نتایج برای «<span class="fw-semibold text-primary">{{ q }}</span>»
-            </div>
-          {% elif tag_filter %}
-            <div class="text-muted small">
-              <i class="bi bi-tag me-1"></i>فیلتر برچسب: «<span class="fw-semibold text-primary">{{ tag_filter }}</span>»
-            </div>
-          {% endif %}
-        </div>
+      <!-- عنوان بخش و تعداد نتایج -->
+      <div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
+        <h4 class="fw-bold text-dark">
+          <i class="bi bi-grid-fill me-2 text-primary"></i>نتایج ({{ pagination.total_count }})
+        </h4>
         <a href="{{ url_for('index') }}" class="btn btn-outline-secondary rounded-pill px-4 hover-scale">
           <i class="bi bi-house-door me-1"></i>خانه
         </a>
       </div>
 
-      <!-- لیست نتایج (کارت‌ها) -->
+      <!-- شبکه کارت‌ها با طراحی متمایز -->
       <div id="discover-list" class="row g-4">
         {% for it in results %}
           <div class="col-md-6" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
             {% include "_card.html" %}
           </div>
+        {% else %}
+          <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+              <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+              <h5 class="text-muted">هیچ صفحه‌ای یافت نشد.</h5>
+              <a href="{{ url_for('discover') }}" class="btn btn-primary mt-3 mx-auto rounded-pill px-5 hover-scale">
+                <i class="bi bi-arrow-repeat me-2"></i>مشاهده همه
+              </a>
+            </div>
+          </div>
         {% endfor %}
       </div>
 
-      <!-- لودر (مخفی) -->
-      <div id="discover-loader" class="text-center my-5" style="display:none;">
-        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-          <span class="visually-hidden">در حال بارگذاری...</span>
-        </div>
-      </div>
-
-      <!-- صفحه‌بندی -->
-      <nav id="discover-pager" class="mt-5" aria-label="صفحه‌بندی نتایج">
-        <ul class="pagination justify-content-center">
-          {% if pagination.page > 1 %}
-            <li class="page-item">
-              <a class="page-link rounded-pill mx-1 px-3" href="{{ url_for('discover') }}?q={{ q }}&tag={{ tag_filter }}&page={{ pagination.page-1 }}" aria-label="قبلی">
-                <i class="bi bi-chevron-right"></i>
-              </a>
-            </li>
-          {% endif %}
-
-          {% for p in range(1, pagination.total_pages + 1) %}
-            {% if p == pagination.page %}
-              <li class="page-item active"><span class="page-link rounded-pill mx-1 px-3">{{ p }}</span></li>
-            {% elif p >= pagination.page - 2 and p <= pagination.page + 2 %}
-              <li class="page-item"><a class="page-link rounded-pill mx-1 px-3" href="{{ url_for('discover') }}?q={{ q }}&tag={{ tag_filter }}&page={{ p }}">{{ p }}</a></li>
-            {% elif p == 1 or p == pagination.total_pages %}
-              <li class="page-item"><a class="page-link rounded-pill mx-1 px-3" href="{{ url_for('discover') }}?q={{ q }}&tag={{ tag_filter }}&page={{ p }}">{{ p }}</a></li>
-            {% elif p == pagination.page - 3 or p == pagination.page + 3 %}
-              <li class="page-item disabled"><span class="page-link rounded-pill mx-1 px-3">…</span></li>
+      <!-- صفحه‌بندی مدرن -->
+      {% if pagination.total_pages > 1 %}
+        <nav id="discover-pager" class="mt-5" aria-label="صفحه‌بندی">
+          <ul class="pagination justify-content-center">
+            {% if pagination.page > 1 %}
+              <li class="page-item">
+                <a class="page-link rounded-pill px-4" href="{{ url_for('discover') }}?q={{ q }}&tag={{ tag_filter }}&page={{ pagination.page-1 }}" aria-label="قبلی">
+                  <i class="bi bi-chevron-right me-1"></i>قبلی
+                </a>
+              </li>
             {% endif %}
-          {% endfor %}
 
-          {% if pagination.page < pagination.total_pages %}
-            <li class="page-item">
-              <a class="page-link rounded-pill mx-1 px-3" href="{{ url_for('discover') }}?q={{ q }}&tag={{ tag_filter }}&page={{ pagination.page+1 }}" aria-label="بعدی">
-                <i class="bi bi-chevron-left"></i>
-              </a>
-            </li>
-          {% endif %}
-        </ul>
-      </nav>
+            {% for p in range(1, pagination.total_pages + 1) %}
+              {% if p == pagination.page %}
+                <li class="page-item active"><span class="page-link rounded-pill px-4">{{ p }}</span></li>
+              {% elif p >= pagination.page - 2 and p <= pagination.page + 2 %}
+                <li class="page-item"><a class="page-link rounded-pill px-4" href="{{ url_for('discover') }}?q={{ q }}&tag={{ tag_filter }}&page={{ p }}">{{ p }}</a></li>
+              {% elif p == 1 or p == pagination.total_pages %}
+                <li class="page-item"><a class="page-link rounded-pill px-4" href="{{ url_for('discover') }}?q={{ q }}&tag={{ tag_filter }}&page={{ p }}">{{ p }}</a></li>
+              {% elif p == pagination.page - 3 or p == pagination.page + 3 %}
+                <li class="page-item disabled"><span class="page-link rounded-pill px-4">…</span></li>
+              {% endif %}
+            {% endfor %}
+
+            {% if pagination.page < pagination.total_pages %}
+              <li class="page-item">
+                <a class="page-link rounded-pill px-4" href="{{ url_for('discover') }}?q={{ q }}&tag={{ tag_filter }}&page={{ pagination.page+1 }}" aria-label="بعدی">
+                  بعدی<i class="bi bi-chevron-left ms-1"></i>
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
     </div>
 
-    <!-- نوار کناری (برچسب‌ها و عملیات) -->
+    <!-- نوار کناری پیشرفته -->
     <aside class="col-lg-4">
-      <!-- کارت برچسب‌ها -->
-      <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4" data-aos="fade-right">
-        <div class="card-header bg-primary text-white py-3 px-4 border-0">
-          <h6 class="mb-0 fw-semibold"><i class="bi bi-tags me-2"></i>برچسب‌های پرکاربرد</h6>
+      <!-- کارت برچسب‌ها با آمار -->
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4 sticky-sidebar" data-aos="fade-left">
+        <div class="card-header bg-primary text-white py-3 px-4 border-0 d-flex align-items-center">
+          <i class="bi bi-tags fs-4 me-2"></i>
+          <h6 class="mb-0 fw-semibold">برچسب‌های محبوب</h6>
         </div>
         <div class="card-body p-4">
           <div class="d-flex flex-wrap gap-2">
             {% for t in all_tags %}
-              <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 tag-filter-btn hover-scale" data-tag="{{ t }}">
-                <i class="bi bi-hash me-1"></i>{{ t }}
-              </button>
+              <a href="{{ url_for('discover') }}?tag={{ t|urlencode }}" class="text-decoration-none">
+                <span class="badge bg-light text-dark rounded-pill px-3 py-2 tag-pill hover-scale">
+                  <i class="bi bi-hash me-1 text-primary"></i>{{ t }}
+                  <span class="ms-1 text-muted small">(۱۲)</span> <!-- می‌توانید شمارنده واقعی را جایگزین کنید -->
+                </span>
+              </a>
             {% else %}
               <div class="text-muted small">هیچ برچسبی یافت نشد</div>
             {% endfor %}
@@ -102,19 +125,35 @@
         </div>
       </div>
 
-      <!-- کارت عملیات سریع -->
+      <!-- کارت عملیات سریع با آیکون‌های بزرگ -->
       <div class="card border-0 shadow-lg rounded-4 overflow-hidden" data-aos="fade-left" data-aos-delay="100">
-        <div class="card-header bg-primary text-white py-3 px-4 border-0">
-          <h6 class="mb-0 fw-semibold"><i class="bi bi-lightning-charge me-2"></i>عملیات سریع</h6>
+        <div class="card-header bg-primary text-white py-3 px-4 border-0 d-flex align-items-center">
+          <i class="bi bi-lightning-charge fs-4 me-2"></i>
+          <h6 class="mb-0 fw-semibold">دسترسی سریع</h6>
         </div>
         <div class="card-body p-4">
           <div class="d-grid gap-3">
-            <a href="{{ url_for('edit_page') }}" class="btn btn-primary rounded-pill py-2 hover-scale">
-              <i class="bi bi-plus-lg me-2"></i>ایجاد صفحه جدید
+            <a href="{{ url_for('edit_page') }}" class="btn btn-primary btn-lg rounded-pill py-3 hover-scale d-flex align-items-center justify-content-center">
+              <i class="bi bi-plus-circle me-2"></i>ایجاد صفحه جدید
             </a>
-            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary rounded-pill py-2 hover-scale">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg rounded-pill py-3 hover-scale d-flex align-items-center justify-content-center">
               <i class="bi bi-house-door me-2"></i>بازگشت به خانه
             </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- کارت آمار (اختیاری) -->
+      <div class="card border-0 shadow-lg rounded-4 overflow-hidden mt-4" data-aos="fade-left" data-aos-delay="200">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center">
+            <div class="stat-icon bg-primary-soft rounded-circle p-3 ms-3">
+              <i class="bi bi-file-text text-primary fs-4"></i>
+            </div>
+            <div>
+              <span class="text-muted small">تعداد کل صفحات</span>
+              <h3 class="fw-bold mb-0">{{ pagination.total_count }}</h3>
+            </div>
           </div>
         </div>
       </div>
@@ -125,35 +164,128 @@
 
 {% block extra_styles %}
 <style>
-  /* استایل‌های سفارشی برای صفحه کاوش */
-  .tag-filter-btn {
-    transition: all 0.2s ease;
-    font-weight: 500;
+  /* استایل‌های اختصاصی برای صفحه کاوش */
+  :root {
+    --glass-bg: rgba(255,255,255,0.9);
   }
-  .tag-filter-btn:hover {
-    background: var(--primary) !important;
-    color: white !important;
-    border-color: var(--primary) !important;
+
+  /* هیرو */
+  .discover-hero {
+    position: relative;
+    overflow: hidden;
+  }
+  .discover-hero::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+    animation: rotate 30s linear infinite;
+    z-index: 0;
+  }
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .discover-hero .container {
+    position: relative;
+    z-index: 1;
+  }
+  .search-form .form-control {
+    border: 2px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(5px);
+    color: white;
+    height: 60px;
+  }
+  .search-form .form-control::placeholder {
+    color: rgba(255,255,255,0.7);
+  }
+  .search-form .form-control:focus {
+    background: rgba(255,255,255,0.25);
+    border-color: white;
+    box-shadow: 0 0 0 0.25rem rgba(255,255,255,0.25);
+  }
+  .btn-light {
+    background: white;
+    border: none;
+    font-weight: 600;
+    color: #0d6efd;
+  }
+  .btn-light:hover {
+    background: #f8f9fa;
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(13,110,253,0.3);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
   }
+
+  /* برچسب‌ها */
+  .tag-pill {
+    background: #f8f9fa !important;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+  .tag-pill:hover {
+    background: #e9ecef !important;
+    border-color: #0d6efd;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 10px rgba(13,110,253,0.2);
+  }
+
+  /* صفحه‌بندی */
   .page-link {
     border: none;
-    background: transparent;
-    color: var(--text-dark);
+    background: #f8f9fa;
+    color: #495057;
     font-weight: 500;
+    margin: 0 3px;
     transition: all 0.2s ease;
+    min-width: 45px;
+    text-align: center;
   }
   .page-link:hover {
-    background: rgba(13,110,253,0.1);
-    color: var(--primary);
+    background: #e9ecef;
+    color: #0d6efd;
     transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   }
   .page-item.active .page-link {
-    background: var(--primary);
+    background: #0d6efd;
     color: white;
-    box-shadow: 0 4px 10px rgba(13,110,253,0.3);
+    box-shadow: 0 4px 12px rgba(13,110,253,0.4);
   }
+  .page-item.disabled .page-link {
+    background: transparent;
+    color: #adb5bd;
+  }
+
+  /* آیکون آمار */
+  .bg-primary-soft {
+    background: rgba(13,110,253,0.1);
+  }
+  .stat-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* چسبندگی سایدبار */
+  .sticky-sidebar {
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+  }
+  @media (max-width: 991px) {
+    .sticky-sidebar {
+      position: relative;
+      top: 0;
+    }
+  }
+
+  /* افکت hover-scale */
   .hover-scale {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
@@ -161,37 +293,25 @@
     transform: translateY(-2px) scale(1.02);
     box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important;
   }
+
+  /* کارت‌ها (با فرض اینکه _card.html از کلاس‌های مشابه استفاده می‌کند) */
   .card {
     transition: all 0.3s ease;
   }
   .card:hover {
-    box-shadow: 0 15px 30px rgba(0,0,0,0.15) !important;
+    box-shadow: 0 20px 30px rgba(0,0,0,0.15) !important;
   }
 </style>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-  // ارسال داده‌های اولیه برای جاوااسکریپت (در صورت نیاز)
+  // داده‌های اولیه برای جاوااسکریپت
   window.DISCOVER_INIT = {
     page: {{ pagination.page|default(1) }},
     total_pages: {{ pagination.total_pages|default(1) }},
     q: "{{ q|e }}",
     tag: "{{ tag_filter|e }}"
   };
-
-  // فعال‌سازی کلیک روی برچسب‌ها (با استفاده از event delegation)
-  document.addEventListener('DOMContentLoaded', function() {
-    const tagButtons = document.querySelectorAll('.tag-filter-btn');
-    tagButtons.forEach(btn => {
-      btn.addEventListener('click', function() {
-        const tag = this.dataset.tag;
-        const url = new URL(window.location.origin + '{{ url_for("discover") }}');
-        url.searchParams.set('tag', tag);
-        url.searchParams.delete('page');
-        window.location.href = url.toString();
-      });
-    });
-  });
 </script>
 {% endblock %}

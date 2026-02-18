@@ -3,7 +3,10 @@ Flask-Login
 Flask-SQLAlchemy
 Flask-Migrate
 Flask-Caching
+Flask-WTF
 Pillow
 python-slugify
-werkzeug
+Werkzeug
 bleach
+email-validator
+python-dotenv

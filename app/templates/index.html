@@ -4,92 +4,105 @@
 {% block title %}صفحه اصلی | Azin.teb{% endblock %}
 
 {% block content %}
+<!-- هیرو با پس‌زمینه گرادیان و دکمه جذاب -->
+<section class="hero-section text-white text-center py-5 mb-5" style="background: linear-gradient(135deg, #0d6efd, #0b5ed7); border-radius: 0 0 3rem 3rem;">
+  <div class="container py-4">
+    <h1 class="display-4 fw-bold mb-3" data-aos="fade-up">به Azin.teb خوش آمدید</h1>
+    <p class="lead mb-4" data-aos="fade-up" data-aos-delay="100">پایگاه دانش تجهیزات پزشکی، مقالات و نظرات شما</p>
+    <div class="d-flex justify-content-center gap-3" data-aos="fade-up" data-aos-delay="200">
+      <a href="{{ url_for('wiki.discover') }}" class="btn btn-light btn-lg rounded-pill px-5 py-3 hover-scale">
+        <i class="bi bi-compass me-2"></i>کاوش در محتوا
+      </a>
+    </div>
+  </div>
+</section>
+
 <div class="container py-4">
   <!-- هدر صفحه با دکمه‌های اقدام -->
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-5" data-aos="fade-down">
     <div>
       <h3 class="fw-bold text-dark mb-1">
-        <i class="bi bi-house-door-fill me-2 text-primary"></i>صفحات اخیر
+        <i class="bi bi-house-door-fill me-2 text-primary"></i>آخرین نوشته‌ها
       </h3>
-      <div class="text-muted small">
+      <p class="text-muted small">
         <i class="bi bi-files me-1"></i>تعداد صفحات: {{ pages|length }}
-      </div>
+      </p>
     </div>
-    <div class="d-flex gap-2 mt-3 mt-sm-0">
-      <a class="btn btn-outline-secondary rounded-pill px-4 py-2 hover-scale" href="{{ url_for('wiki.discover') }}">
-        <i class="bi bi-compass me-1"></i>کاوش
-      </a>
-      {% if current_user.is_authenticated %}
-        <a class="btn btn-primary rounded-pill px-4 py-2 hover-scale" href="{{ url_for('wiki.edit_page', page_slug='new') }}">
-          <i class="bi bi-plus-lg me-1"></i>صفحه جدید
-        </a>
-      {% endif %}
-    </div>
+
   </div>
 
-  <!-- شبکه کارت‌ها -->
+  <!-- شبکه کارت‌ها با طراحی مدرن -->
   <div class="row g-4">
     {% for item in pages %}
-      {# item ممکن است یک slug (string) یا dict/meta باشد. #}
+      {# پردازش ایمن داده‌ها #}
       {% if item is string %}
         {% set slug = item %}
         {% set title = slug.replace('-', ' ') %}
         {% set excerpt = '' %}
         {% set feature = None %}
       {% else %}
-        {# برای دیکشنری یا object مقاوم عمل کن #}
-        {% set slug = item.slug if item is mapping and item.get('slug') is none and (item.get('slug') is defined) is not none else (item.get('slug') if item.get('slug') else (item.slug if item.slug is defined else '')) %}
-        {% set title = (item.get('title') if item.get('title') else (item.title if item.title is defined else (slug.replace('-', ' ') if slug else 'بدون عنوان'))) %}
-        {% set excerpt = (item.get('excerpt') if item.get('excerpt') else (item.excerpt if item.excerpt is defined else '')) %}
-        {% set feature = (item.get('feature_image') if item.get('feature_image') else (item.feature_image if item.feature_image is defined else None)) %}
+        {% set slug = item.slug if item.slug is defined else item.get('slug', '') %}
+        {% set title = item.title if item.title is defined else item.get('title', slug.replace('-', ' ') if slug else 'بدون عنوان') %}
+        {% set excerpt = item.excerpt if item.excerpt is defined else item.get('excerpt', '') %}
+        {% set feature = item.feature_image if item.feature_image is defined else item.get('feature_image', None) %}
       {% endif %}
 
       {% if slug %}
         <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
-          <a class="text-decoration-none" href="{{ url_for('wiki.view_page', page_name=slug) }}">
-            <div class="card border-0 shadow-sm rounded-4 h-100 hover-lift overflow-hidden">
-              {% if feature %}
-                <div class="position-relative" style="height: 160px; overflow: hidden;">
+          <a class="text-decoration-none card-link" href="{{ url_for('wiki.view_page', page_name=slug) }}">
+            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden card-modern">
+              <!-- تصویر با افکت‌های پیشرفته -->
+              <div class="position-relative img-wrapper" style="height: 220px; overflow: hidden;">
+                {% if feature %}
                   <img src="{{ url_for('wiki.uploaded_file', filename=feature) }}"
-                       class="w-100 h-100 object-fit-cover"
+                       class="w-100 h-100 object-fit-cover card-img"
                        alt="{{ title }}"
-                       style="transition: transform 0.4s ease;">
-                  <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-dark opacity-25"></div>
-                </div>
-              {% else %}
-                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 120px;">
-                  <i class="bi bi-image text-muted fs-1"></i>
-                </div>
-              {% endif %}
-              <div class="card-body p-4">
-                <h5 class="fw-bold text-dark mb-2">{{ title }}</h5>
-                {% if excerpt %}
-                  <p class="text-muted small mb-0">{{ excerpt|truncate(120) }}</p>
+                       loading="lazy">
+                  <!-- افکت اوورلی رنگی روی تصویر -->
+                  <div class="img-overlay"></div>
+                  <!-- افکت شاین (درخشش) روی تصویر -->
+                  <div class="img-shine"></div>
                 {% else %}
-                  <p class="text-muted small mb-0 fst-italic">
-                    <i class="bi bi-info-circle me-1"></i>بدون توضیح
+                  <div class="bg-gradient-placeholder d-flex align-items-center justify-content-center w-100 h-100">
+                    <i class="bi bi-image text-white" style="font-size: 3rem; opacity: 0.7;"></i>
+                  </div>
+                {% endif %}
+                <!-- گرادیان مدرن روی تصویر -->
+                <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-modern"></div>
+                <!-- برچسب جدید با طراحی بهتر -->
+                <span class="position-absolute top-0 end-0 m-3 badge bg-white text-primary rounded-pill px-3 py-2 shadow-sm">
+                  <i class="bi bi-stars me-1"></i>جدید
+                </span>
+                <!-- عنوان روی تصویر با افکت slide-up -->
+                <div class="position-absolute bottom-0 start-0 w-100 p-3 text-white title-wrapper">
+                  <h5 class="fw-bold mb-0 card-title-modern">{{ title }}</h5>
+                </div>
+              </div>
+
+              <!-- محتوای کارت (بدون تغییر) -->
+              <div class="card-body p-4">
+                {% if excerpt %}
+                  <p class="text-muted small mb-0 lh-base">{{ excerpt|truncate(100) }}</p>
+                {% else %}
+                  <p class="text-muted small mb-0 lh-base fst-italic">
+                    <i class="bi bi-info-circle me-1 text-primary"></i>بدون توضیح
                   </p>
                 {% endif %}
-                <div class="mt-3 d-flex align-items-center text-primary small">
+                <div class="mt-4 d-flex align-items-center text-primary fw-medium read-more-modern">
                   <span>مشاهده صفحه</span>
-                  <i class="bi bi-arrow-left-circle ms-2"></i>
+                  <i class="bi bi-arrow-left-circle ms-2 transition-icon"></i>
                 </div>
               </div>
             </div>
           </a>
         </div>
       {% else %}
-        {# در صورت نبود slug، یک کارت ساده نمایش بده (احتمالاً خطا) #}
-        <div class="col-12">
-          <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
-            <h5 class="mb-1">{{ title }}</h5>
-            {% if excerpt %}
-              <p class="text-muted small mb-2">{{ excerpt|truncate(120) }}</p>
-            {% else %}
-              <p class="text-muted small mb-2 fst-italic">
-                <i class="bi bi-info-circle me-1"></i>بدون توضیح
-              </p>
-            {% endif %}
+        {# در صورت عدم وجود slug (احتمالاً خطا) یک آیتم placeholder نمایش می‌دهیم #}
+        <div class="col-md-6 col-lg-4">
+          <div class="card border-0 shadow-sm rounded-4 p-4 text-center bg-light">
+            <i class="bi bi-exclamation-triangle text-warning fs-1 mb-3"></i>
+            <h6 class="fw-bold">صفحه نامعتبر</h6>
+            <p class="small text-muted mb-0">این صفحه قابل نمایش نیست.</p>
           </div>
         </div>
       {% endif %}
@@ -112,49 +125,193 @@
 
 {% block extra_styles %}
 <style>
-  /* استایل‌های سفارشی برای صفحه اصلی */
-  .hover-lift {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* استایل‌های پیشرفته و حرفه‌ای */
+  :root {
+    --primary-soft: rgba(13, 110, 253, 0.1);
+    --card-hover-shadow: 0 25px 40px -12px rgba(0,0,0,0.25);
   }
-  .hover-lift:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+
+  /* هیرو */
+  .hero-section {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
   }
-  .hover-lift:hover img {
-    transform: scale(1.05);
+  .hero-section::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: rotate 30s linear infinite;
+    z-index: -1;
   }
-  .bg-gradient-dark {
-    background: linear-gradient(0deg, rgba(0,0,0,0.3) 0%, transparent 100%);
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
-  .card {
-    transition: all 0.2s ease;
-    border: 1px solid rgba(0,0,0,0.03);
-  }
-  .card:hover {
-    border-color: var(--primary-soft);
-  }
+
+  /* دکمه‌ها */
   .hover-scale {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   .hover-scale:hover {
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
   }
-  .btn-outline-secondary, .btn-primary {
+  .btn-outline-secondary {
     border-width: 2px;
     font-weight: 500;
   }
   .btn-outline-secondary:hover {
-    background: var(--primary);
-    border-color: var(--primary);
+    background: var(--bs-primary);
+    border-color: var(--bs-primary);
     color: white;
   }
-  .object-fit-cover {
-    object-fit: cover;
+  .btn-light {
+    background: rgba(255,255,255,0.9);
+    border: none;
+    backdrop-filter: blur(4px);
+    font-weight: 600;
   }
-  .text-placeholder {
-    color: #aaa;
-    font-style: italic;
+  .btn-light:hover {
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+  }
+
+  /* کارت مدرن با تاکید بر تصویر */
+  .card-modern {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.03);
+  }
+  .card-modern:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 25px 40px -15px rgba(0,0,0,0.2) !important;
+    border-color: rgba(13,110,253,0.2);
+  }
+
+  /* بخش تصویر */
+  .img-wrapper {
+    position: relative;
+    background: #f0f0f0;
+    isolation: isolate;
+  }
+
+  .card-img {
+    transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1);
+    will-change: transform;
+  }
+  .card-modern:hover .card-img {
+    transform: scale(1.1);
+  }
+
+  /* اوورلی رنگی (به جای گرادیان ساده) */
+  .img-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(120deg, rgba(13,110,253,0.2) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .card-modern:hover .img-overlay {
+    opacity: 1;
+  }
+
+  /* افکت درخشش (shine) */
+  .img-shine {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.8s ease;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .card-modern:hover .img-shine {
+    transform: translateX(100%);
+  }
+
+  /* گرادیان مدرن (پس‌زمینه) */
+  .bg-gradient-modern {
+    background: linear-gradient(0deg,
+      rgba(0,0,0,0.8) 0%,
+      rgba(0,0,0,0.4) 30%,
+      transparent 60%,
+      rgba(0,0,0,0.1) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* عنوان روی تصویر با حرکت */
+  .title-wrapper {
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+    z-index: 2;
+  }
+  .card-modern:hover .title-wrapper {
+    transform: translateY(-5px);
+  }
+  .card-title-modern {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    font-size: 1.25rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* برچسب جدید */
+  .badge.bg-white {
+    background: rgba(255,255,255,0.95) !important;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.3);
+    font-weight: 500;
+    font-size: 0.75rem;
+    z-index: 3;
+    transition: transform 0.2s ease;
+  }
+  .card-modern:hover .badge.bg-white {
+    transform: scale(1.05);
+  }
+
+  /* placeholder برای تصاویر缺失 */
+  .bg-gradient-placeholder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  /* لینک پایین */
+  .read-more-modern {
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    border-bottom: 1px dotted transparent;
+    display: inline-flex;
+    align-items: center;
+  }
+  .card-modern:hover .read-more-modern {
+    color: #0a58ca !important;
+  }
+  .card-modern:hover .read-more-modern i {
+    transform: translateX(-6px);
+  }
+  .transition-icon {
+    transition: transform 0.2s ease;
+  }
+
+  /* سایر استایل‌های قدیمی که ممکن است استفاده شوند (اختیاری) */
+  .card-hover, .bg-gradient-dark, .read-more, .card-title {
+    /* این کلاس‌ها در صورت وجود تداخل ندارند */
   }
 </style>
 {% endblock %}
