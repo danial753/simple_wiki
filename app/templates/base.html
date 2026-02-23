@@ -2,487 +2,478 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% block title %}Azin.teb{% endblock %}</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>{% block title %}Azin.teb{% endblock %}</title>
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
-  <!-- Font Vazirmatn -->
-  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Vazirmatn -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet">
 
-  <!-- Bootstrap RTL -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <!-- Bootstrap RTL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
 
-  <!-- Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
-  <!-- AOS -->
-  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- AOS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
-  <!-- Circular Text CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/circular-text.css') }}">
+    <!-- Circular Text CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/circular-text.css') }}">
 
-  <!-- Theme variables و استایل‌های پیشرفته -->
-  <style>
-    #plexus-canvas {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 9999 !important;
-    background: rgba(255, 0, 0, 0.1) !important;
-    }
-    :root {
-      --primary: #0d6efd;
-      --primary-dark: #0a58ca;
-      --primary-soft: rgba(13, 110, 253, 0.1);
-      --light-bg: #f8f9fc;
-      --card-bg: #ffffff;
-      --text-dark: #1f2937;
-      --text-muted: #6c757d;
-      --glass-border: rgba(15, 23, 42, 0.08);
-      --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
-      --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
-      --shadow-lg: 0 16px 32px rgba(0,0,0,0.12);
-      --radius-md: 12px;
-      --radius-lg: 16px;
-      --transition: all 0.25s ease;
-    }
-    body {
-      font-family: 'Vazirmatn', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      background: var(--light-bg);
-      color: var(--text-dark);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    /* هدر شیشه‌ای حرفه‌ای */
-    .site-header {
-      position: sticky;
-      top: 0;
-      z-index: 999;
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--glass-border);
-      box-shadow: var(--shadow-sm);
-      transition: var(--transition);
-    }
-    .site-header:hover {
-      box-shadow: var(--shadow-md);
-    }
-    .brand {
-      font-weight: 700;
-      font-size: 1.25rem;
-      color: var(--primary-dark);
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      text-decoration: none;
-      transition: var(--transition);
-    }
-    .brand:hover {
-      color: var(--primary);
-      transform: translateY(-2px);
-    }
-    .logo {
-      height: 46px;
-      width: auto;
-      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.06));
-    }
-    /* جستجو */
-    .search-wrap {
-      width: 420px;
-      max-width: 36vw;
-    }
-    .search-input {
-      border-radius: 12px 0 0 12px;
-      border: 1px solid transparent;
-      background: #f3f6ff;
-      padding: 0.7rem 1.1rem;
-      transition: var(--transition);
-    }
-    .search-input:focus {
-      background: #ffffff;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
-      outline: none;
-    }
-    .search-wrap .btn {
-      border-radius: 0 12px 12px 0;
-      padding: 0.7rem 1.3rem;
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-    }
-    .search-wrap .btn:hover {
-      background: var(--primary-dark);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-    /* آواتار و منو */
-    .avatar-sm {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2.5px solid #fff;
-      box-shadow: var(--shadow-sm);
-    }
-    .avatar-sm:hover {
-      transform: scale(1.06);
-      box-shadow: var(--shadow-md);
-    }
-    .dropdown-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      text-decoration: none;
-      color: var(--text-dark);
-      font-weight: 500;
-      padding: 0.3rem 0.6rem;
-      border-radius: 30px;
-    }
-    .dropdown-toggle:hover {
-      background: var(--primary-soft);
-    }
-    .dropdown-menu {
-      border: none;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-lg);
-      padding: 0.5rem;
-      margin-top: 0.5rem;
-    }
-    .dropdown-item {
-      border-radius: 10px;
-      padding: 0.65rem 1rem;
-      font-weight: 500;
-    }
-    .dropdown-item:hover {
-      background: var(--primary-soft);
-      color: var(--primary-dark);
-      transform: translateX(-5px);
-    }
-    /* دکمه‌ها */
-    .btn-outline-secondary {
-      border-radius: 30px;
-      border-width: 2px;
-      font-weight: 500;
-      padding: 0.45rem 1.25rem;
-    }
-    .btn-outline-secondary:hover {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-    .btn-primary {
-      background: var(--primary);
-      border-color: var(--primary);
-      border-radius: 30px;
-      font-weight: 500;
-      padding: 0.45rem 1.25rem;
-      box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
-    }
-    .btn-primary:hover {
-      background: var(--primary-dark);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 22px rgba(13, 110, 253, 0.4);
-    }
-    /* لودینگ */
-    .loading-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.94);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 99999;
-      transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    #circularLoader {
-      width: 240px !important;
-      height: 240px !important;
-    }
-    .loading-overlay p {
-      color: #fff;
-      font-size: 19px;
-      font-weight: 500;
-      margin-top: 35px;
-      letter-spacing: 1px;
-    }
-    /* فوتر حرفه‌ای شیشه‌ای */
-    .site-footer {
-      background: rgba(255, 255, 255, 0.78);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-top: 1px solid var(--glass-border);
-      box-shadow: var(--shadow-sm);
-      margin-top: 90px;
-      padding: 70px 0 35px;
-      color: var(--text-muted);
-    }
-    .footer-brand {
-      font-size: 1.55rem;
-      font-weight: 700;
-      color: var(--primary-dark);
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-    }
-    .footer-brand img {
-      height: 52px;
-    }
-    .footer-title {
-      color: var(--text-dark);
-      font-weight: 600;
-      margin-bottom: 1.3rem;
-    }
-    .footer-links {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .footer-links li {
-      margin-bottom: 0.75rem;
-    }
-    .footer-links a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-weight: 500;
-      transition: var(--transition);
-    }
-    .footer-links a:hover {
-      color: var(--primary);
-      padding-right: 8px;
-    }
-    .social-icons a {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 44px;
-      height: 44px;
-      background: rgba(13, 110, 253, 0.08);
-      color: var(--primary);
-      border-radius: 50%;
-      margin-left: 12px;
-      font-size: 1.25rem;
-      transition: var(--transition);
-    }
-    .social-icons a:hover {
-      background: var(--primary);
-      color: white;
-      transform: translateY(-5px);
-    }
-    .footer-bottom {
-      border-top: 1px solid var(--glass-border);
-      padding-top: 28px;
-      margin-top: 55px;
-      font-size: 0.9rem;
-    }
-    /* ریسپانسیو */
-    @media (max-width: 992px) {
-      .search-wrap { max-width: 280px; }
-    }
-    @media (max-width: 768px) {
-      .brand span { display: none; }
-      .search-wrap { display: none; }
-    }
+    <!-- Theme variables و استایل‌های پیشرفته -->
+    <style>
+        :root {
+          --primary: #0d6efd;
+          --primary-dark: #0a58ca;
+          --primary-soft: rgba(13, 110, 253, 0.1);
+          --light-bg: #f8f9fc;
+          --card-bg: #ffffff;
+          --text-dark: #1f2937;
+          --text-muted: #6c757d;
+          --glass-border: rgba(15, 23, 42, 0.08);
+          --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
+          --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+          --shadow-lg: 0 16px 32px rgba(0,0,0,0.12);
+          --radius-md: 12px;
+          --radius-lg: 16px;
+          --transition: all 0.25s ease;
+        }
+        body {
+          font-family: 'Vazirmatn', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+          background: var(--light-bg);
+          color: var(--text-dark);
+          line-height: 1.6;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+        /* هدر شیشه‌ای حرفه‌ای */
+        .site-header {
+          position: sticky;
+          top: 0;
+          z-index: 999;
+          background: rgba(255, 255, 255, 0.92);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border-bottom: 1px solid var(--glass-border);
+          box-shadow: var(--shadow-sm);
+          transition: var(--transition);
+        }
+        .site-header:hover {
+          box-shadow: var(--shadow-md);
+        }
+        .brand {
+          font-weight: 700;
+          font-size: 1.25rem;
+          color: var(--primary-dark);
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          text-decoration: none;
+          transition: var(--transition);
+        }
+        .brand:hover {
+          color: var(--primary);
+          transform: translateY(-2px);
+        }
+        .logo {
+          height: 46px;
+          width: auto;
+          filter: drop-shadow(0 3px 6px rgba(0,0,0,0.06));
+        }
+        /* جستجو */
+        .search-wrap {
+          width: 420px;
+          max-width: 36vw;
+        }
+        .search-input {
+          border-radius: 12px 0 0 12px;
+          border: 1px solid transparent;
+          background: #f3f6ff;
+          padding: 0.7rem 1.1rem;
+          transition: var(--transition);
+        }
+        .search-input:focus {
+          background: #ffffff;
+          border-color: var(--primary);
+          box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+          outline: none;
+        }
+        .search-wrap .btn {
+          border-radius: 0 12px 12px 0;
+          padding: 0.7rem 1.3rem;
+          background: var(--primary);
+          border-color: var(--primary);
+          color: white;
+        }
+        .search-wrap .btn:hover {
+          background: var(--primary-dark);
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-md);
+        }
+        /* آواتار و منو */
+        .avatar-sm {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2.5px solid #fff;
+          box-shadow: var(--shadow-sm);
+        }
+        .avatar-sm:hover {
+          transform: scale(1.06);
+          box-shadow: var(--shadow-md);
+        }
+        .dropdown-toggle {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          text-decoration: none;
+          color: var(--text-dark);
+          font-weight: 500;
+          padding: 0.3rem 0.6rem;
+          border-radius: 30px;
+        }
+        .dropdown-toggle:hover {
+          background: var(--primary-soft);
+        }
+        .dropdown-menu {
+          border: none;
+          border-radius: var(--radius-md);
+          box-shadow: var(--shadow-lg);
+          padding: 0.5rem;
+          margin-top: 0.5rem;
+        }
+        .dropdown-item {
+          border-radius: 10px;
+          padding: 0.65rem 1rem;
+          font-weight: 500;
+        }
+        .dropdown-item:hover {
+          background: var(--primary-soft);
+          color: var(--primary-dark);
+          transform: translateX(-5px);
+        }
+        /* دکمه‌ها */
+        .btn-outline-secondary {
+          border-radius: 30px;
+          border-width: 2px;
+          font-weight: 500;
+          padding: 0.45rem 1.25rem;
+        }
+        .btn-outline-secondary:hover {
+          background: var(--primary);
+          border-color: var(--primary);
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-md);
+        }
+        .btn-primary {
+          background: var(--primary);
+          border-color: var(--primary);
+          border-radius: 30px;
+          font-weight: 500;
+          padding: 0.45rem 1.25rem;
+          box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+        }
+        .btn-primary:hover {
+          background: var(--primary-dark);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 22px rgba(13, 110, 253, 0.4);
+        }
+        /* لودینگ */
+        .loading-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.94);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          z-index: 99999;
+          transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #circularLoader {
+          width: 240px !important;
+          height: 240px !important;
+        }
+        .loading-overlay p {
+          color: #fff;
+          font-size: 19px;
+          font-weight: 500;
+          margin-top: 35px;
+          letter-spacing: 1px;
+        }
+        /* فوتر حرفه‌ای شیشه‌ای */
+        .site-footer {
+          background: rgba(255, 255, 255, 0.78);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border-top: 1px solid var(--glass-border);
+          box-shadow: var(--shadow-sm);
+          margin-top: 90px;
+          padding: 70px 0 35px;
+          color: var(--text-muted);
+        }
+        .footer-brand {
+          font-size: 1.55rem;
+          font-weight: 700;
+          color: var(--primary-dark);
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          text-decoration: none;
+        }
+        .footer-brand img {
+          height: 52px;
+        }
+        .footer-title {
+          color: var(--text-dark);
+          font-weight: 600;
+          margin-bottom: 1.3rem;
+        }
+        .footer-links {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        .footer-links li {
+          margin-bottom: 0.75rem;
+        }
+        .footer-links a {
+          color: var(--text-muted);
+          text-decoration: none;
+          font-weight: 500;
+          transition: var(--transition);
+        }
+        .footer-links a:hover {
+          color: var(--primary);
+          padding-right: 8px;
+        }
+        .social-icons a {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 44px;
+          height: 44px;
+          background: rgba(13, 110, 253, 0.08);
+          color: var(--primary);
+          border-radius: 50%;
+          margin-left: 12px;
+          font-size: 1.25rem;
+          transition: var(--transition);
+        }
+        .social-icons a:hover {
+          background: var(--primary);
+          color: white;
+          transform: translateY(-5px);
+        }
+        .footer-bottom {
+          border-top: 1px solid var(--glass-border);
+          padding-top: 28px;
+          margin-top: 55px;
+          font-size: 0.9rem;
+        }
+        /* ریسپانسیو */
+        @media (max-width: 992px) {
+          .search-wrap { max-width: 280px; }
+        }
+        @media (max-width: 768px) {
+          .brand span { display: none; }
+          .search-wrap { display: none; }
+        }
 
-    /* اضافه شده برای پس‌زمینه متحرک */
-    #plexus-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-    }
-  </style>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
-  {% block extra_head %}{% endblock %}
+        /* اضافه شده برای پس‌زمینه متحرک */
+        #plexus-canvas {
+          position: fixed;
+          inset: 0;
+          z-index: -1;
+          pointer-events: none;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
 
-  <canvas id="plexus-canvas"></canvas>
+<canvas id="plexus-canvas"></canvas>
 
-  <!-- Loading Overlay -->
-  <div id="fullPageLoader" class="loading-overlay">
+<!-- Loading Overlay -->
+<div id="fullPageLoader" class="loading-overlay">
     <div id="circularLoader"></div>
-  </div>
+</div>
 
-  {# helpers ایمن برای url_for #}
-  {% macro safe_url_for(endpoint, filename=None) %}
-    {% if endpoint_exists(endpoint) %}
-      {{ url_for(endpoint, filename=filename) }}
-    {% elif endpoint == 'auth.uploads_file' and filename %}
-      /uploads/{{ filename }}
-    {% else %}
-      #
-    {% endif %}
-  {% endmacro %}
+{# helpers ایمن برای url_for #}
+{% macro safe_url_for(endpoint, filename=None) %}
+{% if endpoint_exists(endpoint) %}
+{{ url_for(endpoint, filename=filename) }}
+{% elif endpoint == 'auth.uploads_file' and filename %}
+/uploads/{{ filename }}
+{% else %}
+#
+{% endif %}
+{% endmacro %}
 
-  {% set home_url = url_for('wiki.index') if endpoint_exists('wiki.index') else '/' %}
-  {% set discover_url = url_for('wiki.discover') if endpoint_exists('wiki.discover') else url_for('wiki.index') %}
-  {% set edit_url = url_for('wiki.edit_page', page_slug='new') if endpoint_exists('wiki.edit_page') else '/edit/new' %}
-  {% set login_url = url_for('auth.login') if endpoint_exists('auth.login') else '/login' %}
-  {% set profile_url = url_for('auth.profile') if endpoint_exists('auth.profile') else '/profile' %}
-  {% set admin_users_url = url_for('admin.admin_users') if endpoint_exists('admin.admin_users') else None %}
+{% set home_url = url_for('wiki.index') if endpoint_exists('wiki.index') else '/' %}
+{% set discover_url = url_for('wiki.discover') if endpoint_exists('wiki.discover') else url_for('wiki.index') %}
+{% set edit_url = url_for('wiki.edit_page', page_slug='new') if endpoint_exists('wiki.edit_page') else '/edit/new' %}
+{% set login_url = url_for('auth.login') if endpoint_exists('auth.login') else '/login' %}
+{% set profile_url = url_for('auth.profile') if endpoint_exists('auth.profile') else '/profile' %}
+{% set admin_users_url = url_for('admin.admin_users') if endpoint_exists('admin.admin_users') else None %}
 
-  <header class="site-header" data-aos="fade-down">
+<header class="site-header" data-aos="fade-down">
     <div class="container d-flex align-items-center justify-content-between py-2">
-      <a class="brand" href="{{ home_url }}">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Azin.teb" class="logo"
-             onerror="this.onerror=null; this.src='{{ url_for('static', filename='default_avatar.png') }}'">
-        <span>Azin.teb</span>
-      </a>
-      <form id="global-search" class="d-flex ms-auto me-3" action="{{ discover_url }}" method="GET" role="search">
-        <div class="input-group search-wrap">
-          <input name="q" value="{{ request.args.get('q','') }}" class="form-control search-input" placeholder="جستجو در صفحات و تگ‌ها..." aria-label="جستجو">
-          <button class="btn btn-primary" type="submit" aria-label="جستجو"><i class="bi bi-search"></i></button>
-        </div>
-      </form>
-      <nav class="d-flex gap-2 align-items-center">
-        {% if endpoint_exists('wiki.discover') %}
-          <a class="btn btn-outline-secondary" href="{{ discover_url }}"><i class="bi bi-compass me-1"></i>کاوش</a>
-        {% else %}
-          <a class="btn btn-outline-secondary" href="{{ url_for('wiki.index') }}"><i class="bi bi-search me-1"></i>کاوش</a>
-        {% endif %}
-        {% if current_user.is_authenticated %}
-          <a class="btn btn-primary" href="{{ edit_url }}"><i class="bi bi-plus-lg me-1"></i>صفحه جدید</a>
-          <div class="dropdown">
-            <a class="dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-              {% set avatar_path = current_user.avatar if current_user.avatar else 'default_avatar.png' %}
-              <img src="{{ safe_url_for('auth.uploads_file', filename=avatar_path) }}"
-                   class="avatar-sm" alt="avatar"
-                   onerror="this.onerror=null; this.src='{{ url_for('static', filename='default_avatar.png') }}'">
-              <span class="small fw-semibold">{{ current_user.username }}</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <a class="dropdown-item" href="{{ profile_url }}">
-                  <i class="bi bi-person me-2"></i>پروفایل
-                </a>
-              </li>
-              {% if current_user.role == 'admin' and admin_users_url %}
-                <li>
-                  <a class="dropdown-item" href="{{ admin_users_url }}">
-                    <i class="bi bi-people me-2"></i>مدیریت کاربران
-                  </a>
-                </li>
-              {% endif %}
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') if endpoint_exists('auth.logout') else '#' }}">
-                  <i class="bi bi-box-arrow-right me-2"></i>خروج
-                </a>
-              </li>
-            </ul>
-          </div>
-        {% else %}
-          <a class="btn btn-outline-primary" href="{{ login_url }}"><i class="bi bi-box-arrow-in-right me-1"></i>ورود</a>
-        {% endif %}
-      </nav>
-    </div>
-  </header>
-
-  <main class="container mt-0 pt-0">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="mb-4">
-          {% for cat, msg in messages %}
-            <div class="alert alert-{{ 'danger' if cat=='danger' else ('warning' if cat=='warning' else ('success' if cat=='success' else 'info')) }} alert-dismissible fade show shadow-sm" role="alert" data-aos="fade-in">
-              <i class="bi bi-{{ 'exclamation-triangle' if cat=='danger' else 'exclamation-circle' if cat=='warning' else 'check-circle' if cat=='success' else 'info-circle' }} me-2"></i>
-              {{ msg }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
+        <a class="brand" href="{{ home_url }}">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Azin.teb" class="logo"
+                 onerror="this.onerror=null; this.src='{{ url_for('static', filename='default_avatar.png') }}'">
+            <span>Azin.teb</span>
+        </a>
+        <form id="global-search" class="d-flex ms-auto me-3" action="{{ discover_url }}" method="GET" role="search">
+            <div class="input-group search-wrap">
+                <input name="q" value="{{ request.args.get('q','') }}" class="form-control search-input"
+                       placeholder="جستجو در صفحات و تگ‌ها..." aria-label="جستجو">
+                <button class="btn btn-primary" type="submit" aria-label="جستجو"><i class="bi bi-search"></i></button>
             </div>
-          {% endfor %}
+        </form>
+        <nav class="d-flex gap-2 align-items-center">
+            {% if endpoint_exists('wiki.discover') %}
+            <a class="btn btn-outline-secondary" href="{{ discover_url }}"><i class="bi bi-compass me-1"></i>کاوش</a>
+            {% else %}
+            <a class="btn btn-outline-secondary" href="{{ url_for('wiki.index') }}"><i class="bi bi-search me-1"></i>کاوش</a>
+            {% endif %}
+            {% if current_user.is_authenticated %}
+            <a class="btn btn-primary" href="{{ edit_url }}"><i class="bi bi-plus-lg me-1"></i>صفحه جدید</a>
+            <div class="dropdown">
+                <a class="dropdown-toggle" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% set avatar_path = current_user.avatar if current_user.avatar else 'default_avatar.png' %}
+                    <img src="{{ safe_url_for('auth.uploads_file', filename=avatar_path) }}"
+                         class="avatar-sm" alt="avatar"
+                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='default_avatar.png') }}'">
+                    <span class="small fw-semibold">{{ current_user.username }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="{{ profile_url }}">
+                            <i class="bi bi-person me-2"></i>پروفایل
+                        </a>
+                    </li>
+                    {% if current_user.role == 'admin' and admin_users_url %}
+                    <li>
+                        <a class="dropdown-item" href="{{ admin_users_url }}">
+                            <i class="bi bi-people me-2"></i>مدیریت کاربران
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <a class="dropdown-item text-danger"
+                           href="{{ url_for('auth.logout') if endpoint_exists('auth.logout') else '#' }}">
+                            <i class="bi bi-box-arrow-right me-2"></i>خروج
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% else %}
+            <a class="btn btn-outline-primary" href="{{ login_url }}"><i class="bi bi-box-arrow-in-right me-1"></i>ورود</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+
+<main class="container mt-0 pt-0">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="mb-4">
+        {% for cat, msg in messages %}
+        <div class="alert alert-{{ 'danger' if cat=='danger' else ('warning' if cat=='warning' else ('success' if cat=='success' else 'info')) }} alert-dismissible fade show shadow-sm"
+             role="alert" data-aos="fade-in">
+            <i class="bi bi-{{ 'exclamation-triangle' if cat=='danger' else 'exclamation-circle' if cat=='warning' else 'check-circle' if cat=='success' else 'info-circle' }} me-2"></i>
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="بستن"></button>
         </div>
-      {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
     {% endwith %}
     {% block content %}{% endblock %}
-  </main>
+</main>
 
-  <!-- فوتر حرفه‌ای -->
-  <footer class="site-footer">
-    <div class="container">
-      <div class="row gy-5">
-        <!-- ستون برند -->
-        <div class="col-lg-4 col-md-6">
-          <a href="{{ home_url }}" class="footer-brand">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Azin.teb">
-            Azin.teb
-          </a>
-          <p class="mt-3 small" style="max-width: 290px;">
-            دانشنامه جامع پزشکی و سلامت — اطلاعات علمی دقیق، به‌روز و قابل اعتماد برای همه ایرانیان.
-          </p>
-        </div>
-        <!-- لینک‌های سریع -->
-        <div class="col-lg-2 col-md-6">
-          <h5 class="footer-title">لینک‌های سریع</h5>
-          <ul class="footer-links">
-            <li><a href="{{ home_url }}">خانه</a></li>
-            <li><a href="{{ discover_url }}">کاوش صفحات</a></li>
-            <li><a href="#">مقالات جدید</a></li>
-            <li><a href="#">تگ‌های پربازدید</a></li>
-          </ul>
-        </div>
-        <!-- Azin.teb -->
-        <div class="col-lg-3 col-md-6">
-          <h5 class="footer-title">Azin.teb</h5>
-          <ul class="footer-links">
-            <li><a href="#">درباره ما</a></li>
-            <li><a href="#">تماس با ما</a></li>
-            <li><a href="#">همکاری با پزشکان</a></li>
-            <li><a href="#">شرایط استفاده</a></li>
-            <li><a href="#">حریم خصوصی</a></li>
-          </ul>
-        </div>
-        <!-- ارتباط با ما -->
-        <div class="col-lg-3 col-md-6">
-          <h5 class="footer-title">ارتباط با ما</h5>
-          <p class="small mb-3">همیشه در خدمت شما هستیم</p>
-          <div class="social-icons mb-4">
-            <a href="#" target="_blank" title="تلگرام"><i class="bi bi-telegram"></i></a>
-            <a href="#" target="_blank" title="اینستاگرام"><i class="bi bi-instagram"></i></a>
-            <a href="#" target="_blank" title="لینکدین"><i class="bi bi-linkedin"></i></a>
-            <a href="#" target="_blank" title="یوتیوب"><i class="bi bi-youtube"></i></a>
-          </div>
-          <small class="text-muted">info@azin.teb</small>
-        </div>
-      </div>
-      <!-- کپی‌رایت -->
-      <div class="footer-bottom text-center">
-        <small>
-          © ۱۴۰۳ — ۱۴۰۴ Azin.teb | تمامی حقوق محفوظ است.
-          ساخته شده با ❤️ برای سلامت ایران
-        </small>
-      </div>
-    </div>
-  </footer>
+<!-- فوتر حرفه‌ای -->
+<!--<footer class="site-footer">-->
+<!--    <div class="container">-->
+<!--        <div class="row gy-5">-->
+<!--            &lt;!&ndash; ستون برند &ndash;&gt;-->
+<!--            <div class="col-lg-4 col-md-6">-->
+<!--                <a href="{{ home_url }}" class="footer-brand">-->
+<!--                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Azin.teb">-->
+<!--                    Azin.teb-->
+<!--                </a>-->
+<!--                <p class="mt-3 small" style="max-width: 290px;">-->
+<!--                    دانشنامه جامع پزشکی و سلامت — اطلاعات علمی دقیق، به‌روز و قابل اعتماد برای همه ایرانیان.-->
+<!--                </p>-->
+<!--            </div>-->
+<!--            &lt;!&ndash; لینک‌های سریع &ndash;&gt;-->
+<!--            <div class="col-lg-2 col-md-6">-->
+<!--                <h5 class="footer-title">لینک‌های سریع</h5>-->
+<!--                <ul class="footer-links">-->
+<!--                    <li><a href="{{ home_url }}">خانه</a></li>-->
+<!--                    <li><a href="{{ discover_url }}">کاوش صفحات</a></li>-->
+<!--                    <li><a href="#">مقالات جدید</a></li>-->
+<!--                    <li><a href="#">تگ‌های پربازدید</a></li>-->
+<!--                </ul>-->
+<!--            </div>-->
+<!--            &lt;!&ndash; Azin.teb &ndash;&gt;-->
+<!--            <div class="col-lg-3 col-md-6">-->
+<!--                <h5 class="footer-title">Azin.teb</h5>-->
+<!--                <ul class="footer-links">-->
+<!--                    <li><a href="#">درباره ما</a></li>-->
+<!--                    <li><a href="#">تماس با ما</a></li>-->
+<!--                    <li><a href="#">همکاری با پزشکان</a></li>-->
+<!--                    <li><a href="#">شرایط استفاده</a></li>-->
+<!--                    <li><a href="#">حریم خصوصی</a></li>-->
+<!--                </ul>-->
+<!--            </div>-->
+<!--            &lt;!&ndash; ارتباط با ما &ndash;&gt;-->
+<!--            <div class="col-lg-3 col-md-6">-->
+<!--                <h5 class="footer-title">ارتباط با ما</h5>-->
+<!--                <p class="small mb-3">همیشه در خدمت شما هستیم</p>-->
+<!--                <div class="social-icons mb-4">-->
+<!--                    <a href="#" target="_blank" title="تلگرام"><i class="bi bi-telegram"></i></a>-->
+<!--                    <a href="#" target="_blank" title="اینستاگرام"><i class="bi bi-instagram"></i></a>-->
+<!--                    <a href="#" target="_blank" title="لینکدین"><i class="bi bi-linkedin"></i></a>-->
+<!--                    <a href="#" target="_blank" title="یوتیوب"><i class="bi bi-youtube"></i></a>-->
+<!--                </div>-->
+<!--                <small class="text-muted">info@azin.teb</small>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    </div>-->
+<!--</footer>-->
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- AOS -->
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-  <script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- AOS -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
     AOS.init({
       duration: 800,
       once: true,
       easing: 'ease-in-out'
     });
-  </script>
+</script>
 
-  <!-- main app js -->
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/circular-text.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/plexus-bg.js') }}"></script>
+<!-- main app js -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/circular-text.js') }}"></script>
+<script src="{{ url_for('static', filename='js/plexus-bg.js') }}"></script>
 
-  {% block extra_scripts %}{% endblock %}
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>
