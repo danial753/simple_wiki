@@ -1,124 +1,183 @@
 // static/js/plexus-bg.js
-// نسخه حرفه‌ای 2026 – پس‌زمینه متحرک نقاط + خطوط اتصال + تعامل موس
+// نسخه فوق پیشرفته 2027 – افکت نئونی + flocking + ripple چندلایه + هوشمند
 
 document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('plexus-canvas');
   if (!canvas || !canvas.getContext) return;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: true });
   if (!ctx) return;
 
-  // تنظیمات اصلی – همه چیز اینجا قابل تغییر است
+  // تنظیمات اصلی – همه چیز قابل تنظیم
   const CONFIG = {
-    particleCount: 100,            // تعداد ذرات (70–150 مناسب است)
-    maxDistance: 170,              // حداکثر فاصله برای رسم خط
-    baseLineOpacity: 0.25,         // شفافیت پایه خطوط
-    particleRadius: 2.5,           // اندازه نقاط
-    particleGlow: true,            // درخشش نرم دور نقاط
-    speed: 0.7,                    // سرعت پایه حرکت
-    trailOpacity: 0.08,            // شدت محو شدن پس‌زمینه
-    lineColor: [13, 110, 253],     // rgb رنگ خطوط (آبی اصلی)
-    mouseAttraction: 0.004,        // قدرت کشش ذرات به سمت موس
-    mouseRadius: 220,              // شعاع اثر موس
+    particleCount: window.innerWidth < 768 ? 70 : 40,
+    maxDistance: 190,
+    cohesion: 0.0008,           // تمایل به نزدیک موندن (flocking)
+    alignment: 0.015,           // هم‌جهت شدن با همسایه‌ها
+    separation: 0.05,           // دوری از همسایه‌های خیلی نزدیک
+    perceptionRadius: 80,       // شعاع دید ذرات برای flocking
+    baseLineOpacity: 0.18,
+    lineGlow: true,
+    particlePulse: true,
+    pulseSpeed: 0.0018,
+    particleRadius: 2.6,
+    glowIntensity: 14,
+    trailOpacity: 0.09,
+    lineColorStart: [59, 130, 246],   // آبی روشن
+    lineColorMid: [29, 78, 216],      // آبی متوسط
+    lineColorEnd: [13, 110, 253],     // آبی تیره
+    mouseAttraction: 0.006,
+    mouseRadius: 260,
+    ripple: { enabled: true, layers: 3, speed: 0.9, maxRadius: 450, opacity: 0.15 },
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
   };
 
-  let width = 0;
-  let height = 0;
+  let width = 0, height = 0;
   let particles = [];
-  let mouse = { x: null, y: null, active: false };
-  let lastTime = 0;
+  let mouse = { x: null, y: null, active: false, rippleStart: 0 };
+  let lastTime = performance.now();
+  let globalTime = 0;
 
-  // تنظیم اندازه canvas
+  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  // تنظیم اندازه
   function resize() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
+    CONFIG.particleCount = window.innerWidth < 768 ? 70 : 40;
+    initParticles();
   }
 
-  // Debounce resize
-  let resizeTimeout;
+  let resizeTimer;
   window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(resize, 150);
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 200);
   });
 
-  // موقعیت موس
-  const updateMouse = (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
+  // موس و تاچ
+  const onPointerMove = e => {
+    mouse.x = e.clientX ?? e.touches?.[0]?.clientX;
+    mouse.y = e.clientY ?? e.touches?.[0]?.clientY;
     mouse.active = true;
+    if (CONFIG.ripple.enabled) mouse.rippleStart = performance.now();
   };
-  window.addEventListener('mousemove', updateMouse);
-  window.addEventListener('touchmove', e => updateMouse(e.touches[0]), { passive: true });
 
-  window.addEventListener('mouseout', () => {
-    mouse.active = false;
-  });
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerout', () => mouse.active = false);
 
-  // کلاس ذره
   class Particle {
     constructor() {
       this.reset();
+      this.phase = Math.random() * Math.PI * 2;
+      this.neighbours = [];
     }
 
     reset() {
       this.x = Math.random() * width;
       this.y = Math.random() * height;
-      this.vx = (Math.random() - 0.5) * CONFIG.speed;
-      this.vy = (Math.random() - 0.5) * CONFIG.speed;
+      this.vx = (Math.random() - 0.5) * 1.2;
+      this.vy = (Math.random() - 0.5) * 1.2;
+      this.alpha = 0;
+      this.speed = 0;
     }
 
-    update() {
-      // کشش به سمت موس (اگر فعال باشد)
-      if (mouse.active && mouse.x !== null && mouse.y !== null) {
+    update(delta, time) {
+      // fade-in
+      this.alpha = Math.min(1, this.alpha + delta * 0.0012);
+
+      // flocking behavior
+      let steerX = 0, steerY = 0;
+      let count = 0;
+
+      for (const other of particles) {
+        if (other === this) continue;
+        const dx = other.x - this.x;
+        const dy = other.y - this.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < CONFIG.perceptionRadius && dist > 0) {
+          count++;
+          // cohesion (به مرکز گروه برو)
+          steerX += other.x;
+          steerY += other.y;
+          // separation (دوری از خیلی نزدیک‌ها)
+          if (dist < 35) {
+            steerX -= dx * CONFIG.separation;
+            steerY -= dy * CONFIG.separation;
+          }
+          // alignment (هم‌جهت شو)
+          steerX += other.vx;
+          steerY += other.vy;
+        }
+      }
+
+      if (count > 0) {
+        steerX = (steerX / count - this.x) * CONFIG.cohesion;
+        steerY = (steerY / count - this.y) * CONFIG.cohesion;
+        steerX += (steerX / count - this.vx) * CONFIG.alignment;
+        steerY += (steerY / count - this.vy) * CONFIG.alignment;
+        this.vx += steerX;
+        this.vy += steerY;
+      }
+
+      // موس
+      if (mouse.active && mouse.x && mouse.y) {
         const dx = mouse.x - this.x;
         const dy = mouse.y - this.y;
         const dist = Math.hypot(dx, dy);
-
-        if (dist < CONFIG.mouseRadius && dist > 1) {
+        if (dist < CONFIG.mouseRadius && dist > 5) {
           const force = CONFIG.mouseAttraction * (CONFIG.mouseRadius - dist) / CONFIG.mouseRadius;
           this.vx += dx * force;
           this.vy += dy * force;
         }
       }
 
-      this.x += this.vx;
-      this.y += this.vy;
+      this.x += this.vx * (CONFIG.reducedMotion ? 0.3 : 1);
+      this.y += this.vy * (CONFIG.reducedMotion ? 0.3 : 1);
 
-      // اگر از مرز خارج شد، از سمت مقابل ظاهر شود (حلقه‌ای)
-      if (this.x < -20) this.x = width + 20;
-      if (this.x > width + 20) this.x = -20;
-      if (this.y < -20) this.y = height + 20;
-      if (this.y > height + 20) this.y = -20;
+      // wrap around + کمی چرخش
+      if (this.x < -40) this.x = width + 40;
+      if (this.x > width + 40) this.x = -40;
+      if (this.y < -40) this.y = height + 40;
+      if (this.y > height + 40) this.y = -40;
+
+      // محاسبه سرعت برای تغییر رنگ/اندازه
+      this.speed = Math.hypot(this.vx, this.vy);
     }
 
-    draw() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, CONFIG.particleRadius, 0, Math.PI * 2);
+    draw(time) {
+      const pulse = CONFIG.particlePulse && !CONFIG.reducedMotion
+        ? 1 + Math.sin(time * CONFIG.pulseSpeed + this.phase) * 0.4
+        : 1;
 
-      if (CONFIG.particleGlow) {
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = 'rgba(0,0,0,0.4)';
+      const r = CONFIG.particleRadius * pulse * this.alpha;
+
+      ctx.save();
+      ctx.globalAlpha = this.alpha;
+
+      if (CONFIG.glowIntensity) {
+        ctx.shadowBlur = CONFIG.glowIntensity * pulse * (1 + this.speed * 0.5);
+        ctx.shadowColor = `rgba(13,110,253,${0.6 + this.speed * 0.2})`;
       }
 
-      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,0,0,${0.9 * this.alpha})`;
       ctx.fill();
 
-      // ریست سایه بعد از رسم
-      ctx.shadowBlur = 0;
+      ctx.restore();
     }
   }
 
-  // ایجاد ذرات
-  function init() {
+  function initParticles() {
     particles = [];
     for (let i = 0; i < CONFIG.particleCount; i++) {
       particles.push(new Particle());
     }
   }
 
-  // رسم اتصالات
-  function drawLines() {
+  function drawConnections() {
+    ctx.lineWidth = 1.3;
     for (let i = 0; i < particles.length; i++) {
       for (let j = i + 1; j < particles.length; j++) {
         const p1 = particles[i];
@@ -129,54 +188,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (dist >= CONFIG.maxDistance) continue;
 
-        let opacity = CONFIG.baseLineOpacity * (1 - dist / CONFIG.maxDistance);
+        const opacity = CONFIG.baseLineOpacity * (1 - dist / CONFIG.maxDistance) * p1.alpha * p2.alpha;
 
-        // اثر موس (اختیاری)
-        if (CONFIG.mouseAttraction && mouse.active && mouse.x !== null) {
-          const md1 = Math.hypot(p1.x - mouse.x, p1.y - mouse.y);
-          const md2 = Math.hypot(p2.x - mouse.x, p2.y - mouse.y);
-          if (md1 < CONFIG.mouseRadius || md2 < CONFIG.mouseRadius) {
-            opacity = Math.min(0.7, opacity + 0.4);
-          }
+        const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+        gradient.addColorStop(0, `rgba(${CONFIG.lineColorStart.join(',')},${opacity})`);
+        gradient.addColorStop(0.5, `rgba(${CONFIG.lineColorMid.join(',')},${opacity * 0.9})`);
+        gradient.addColorStop(1, `rgba(${CONFIG.lineColorEnd.join(',')},${opacity * 0.7})`);
+
+        if (CONFIG.lineGlow) {
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = `rgba(59,130,246,${opacity * 0.8})`;
         }
 
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
-        ctx.strokeStyle = `rgba(${CONFIG.lineColor.join(',')}, ${opacity})`;
-        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = gradient;
         ctx.stroke();
       }
     }
+    ctx.shadowBlur = 0;
   }
 
-  // حلقه اصلی انیمیشن
-  function animate(timestamp) {
-    if (!lastTime) lastTime = timestamp;
-    const delta = timestamp - lastTime;
+  function drawRipples() {
+    if (!CONFIG.ripple.enabled || !mouse.active || !mouse.x || !mouse.y) return;
 
-    // محدود کردن به ~60fps + احترام به prefers-reduced-motion
-    if (delta > 16) {
-      if (document.visibilityState === 'visible' && !CONFIG.reducedMotion) {
-        ctx.fillStyle = `rgba(248, 249, 252, ${CONFIG.trailOpacity})`;
-        ctx.fillRect(0, 0, width, height);
+    const elapsed = performance.now() - mouse.rippleStart;
+    if (elapsed > CONFIG.ripple.maxRadius * 3) return;
 
-        particles.forEach(p => {
-          p.update();
-          p.draw();
-        });
+    for (let i = 0; i < CONFIG.ripple.layers; i++) {
+      const delay = i * 300;
+      if (elapsed < delay) continue;
 
-        drawLines();
-      }
+      const radius = ((elapsed - delay) * CONFIG.ripple.speed) % (CONFIG.ripple.maxRadius * 1.5);
+      const opacity = Math.max(0, (1 - radius / CONFIG.ripple.maxRadius) * CONFIG.ripple.opacity * (1 - i * 0.3));
 
-      lastTime = timestamp;
+      ctx.beginPath();
+      ctx.arc(mouse.x, mouse.y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(13,110,253,${opacity})`;
+      ctx.lineWidth = 2 + opacity * 10;
+      ctx.stroke();
+    }
+  }
+
+  // حلقه انیمیشن
+  function animate(now) {
+    const delta = now - lastTime;
+    globalTime += delta * 0.001;
+    lastTime = now;
+
+    if (delta > 16 && document.visibilityState === 'visible' && !CONFIG.reducedMotion) {
+      ctx.fillStyle = `rgba(248,249,252,${CONFIG.trailOpacity})`;
+      ctx.fillRect(0, 0, width, height);
+
+      particles.forEach(p => {
+        p.update(delta, globalTime);
+        p.draw(globalTime);
+      });
+
+      drawConnections();
+      drawRipples();
     }
 
     requestAnimationFrame(animate);
   }
 
-  // راه‌اندازی
+  // راه‌اندازی نهایی
   resize();
-  init();
+  initParticles();
   requestAnimationFrame(animate);
 });
