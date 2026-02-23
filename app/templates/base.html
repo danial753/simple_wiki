@@ -10,7 +10,7 @@
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
-  <!-- Font Vazirmatn (یکسان با صفحه قبل) -->
+  <!-- Font Vazirmatn -->
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Bootstrap RTL -->
@@ -19,13 +19,16 @@
   <!-- Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
-  <!-- AOS (برای هماهنگی با صفحه جزئیات) -->
+  <!-- AOS -->
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+  <!-- Circular Text CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/circular-text.css') }}">
 
   <!-- Theme variables و استایل‌های پیشرفته -->
   <style>
     :root {
-      --primary: #0d6efd;          /* آبی یکسان با صفحه قبل */
+      --primary: #0d6efd;
       --primary-dark: #0a58ca;
       --primary-soft: rgba(13, 110, 253, 0.1);
       --light-bg: #f8f9fc;
@@ -50,21 +53,25 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* هدر با افکت شیشه‌ای */
+    /* هدر شیشه‌ای حرفه‌ای */
     .site-header {
       position: sticky;
       top: 0;
       z-index: 999;
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--glass-border);
       box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .site-header:hover {
+      box-shadow: var(--shadow-md);
     }
 
     .brand {
       font-weight: 700;
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       color: var(--primary-dark);
       display: flex;
       align-items: center;
@@ -74,42 +81,39 @@
     }
     .brand:hover {
       color: var(--primary);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
     }
 
     .logo {
-      height: 42px;
+      height: 46px;
       width: auto;
-      display: inline-block;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.06));
     }
 
-    /* نوار جستجو */
+    /* جستجو */
     .search-wrap {
       width: 420px;
       max-width: 36vw;
     }
     .search-input {
-      border-radius: 10px 0 0 10px;
-      border: none;
-      background: #f3f6ff;
-      padding: 0.6rem 1rem;
-      transition: var(--transition);
+      border-radius: 12px 0 0 12px;
       border: 1px solid transparent;
+      background: #f3f6ff;
+      padding: 0.7rem 1.1rem;
+      transition: var(--transition);
     }
     .search-input:focus {
       background: #ffffff;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+      box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
       outline: none;
     }
     .search-wrap .btn {
-      border-radius: 0 10px 10px 0;
-      padding: 0.6rem 1.2rem;
+      border-radius: 0 12px 12px 0;
+      padding: 0.7rem 1.3rem;
       background: var(--primary);
       border-color: var(--primary);
       color: white;
-      transition: var(--transition);
     }
     .search-wrap .btn:hover {
       background: var(--primary-dark);
@@ -117,20 +121,18 @@
       box-shadow: var(--shadow-md);
     }
 
-    /* آواتار و منوی کاربر */
+    /* آواتار و منو */
     .avatar-sm {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       object-fit: cover;
-      border: 2px solid #fff;
+      border: 2.5px solid #fff;
       box-shadow: var(--shadow-sm);
-      transition: var(--transition);
     }
     .avatar-sm:hover {
-      transform: scale(1.05);
+      transform: scale(1.06);
       box-shadow: var(--shadow-md);
-      border-color: var(--primary-soft);
     }
 
     .dropdown-toggle {
@@ -140,9 +142,8 @@
       text-decoration: none;
       color: var(--text-dark);
       font-weight: 500;
-      padding: 0.25rem 0.5rem;
+      padding: 0.3rem 0.6rem;
       border-radius: 30px;
-      transition: var(--transition);
     }
     .dropdown-toggle:hover {
       background: var(--primary-soft);
@@ -156,27 +157,22 @@
       margin-top: 0.5rem;
     }
     .dropdown-item {
-      border-radius: 8px;
-      padding: 0.6rem 1rem;
-      transition: var(--transition);
+      border-radius: 10px;
+      padding: 0.65rem 1rem;
       font-weight: 500;
     }
     .dropdown-item:hover {
       background: var(--primary-soft);
       color: var(--primary-dark);
-      transform: translateX(-4px);
-    }
-    .dropdown-item i {
-      color: var(--primary);
+      transform: translateX(-5px);
     }
 
-    /* دکمه‌های اصلی */
+    /* دکمه‌ها */
     .btn-outline-secondary {
       border-radius: 30px;
       border-width: 2px;
       font-weight: 500;
-      padding: 0.4rem 1.2rem;
-      transition: var(--transition);
+      padding: 0.45rem 1.25rem;
     }
     .btn-outline-secondary:hover {
       background: var(--primary);
@@ -191,85 +187,131 @@
       border-color: var(--primary);
       border-radius: 30px;
       font-weight: 500;
-      padding: 0.4rem 1.2rem;
-      transition: var(--transition);
-      box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+      padding: 0.45rem 1.25rem;
+      box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
     }
     .btn-primary:hover {
       background: var(--primary-dark);
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(13, 110, 253, 0.4);
-    }
-    .btn-primary i {
-      font-size: 0.9rem;
+      box-shadow: 0 8px 22px rgba(13, 110, 253, 0.4);
     }
 
-    /* فوتر */
-    footer.site-footer {
-      margin-top: 60px;
+    /* لودینگ */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.94);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #circularLoader {
+      width: 240px !important;
+      height: 240px !important;
+    }
+    .loading-overlay p {
+      color: #fff;
+      font-size: 19px;
+      font-weight: 500;
+      margin-top: 35px;
+      letter-spacing: 1px;
+    }
+
+    /* فوتر حرفه‌ای شیشه‌ای */
+    .site-footer {
+      background: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border-top: 1px solid var(--glass-border);
-      background: rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(4px);
-      padding: 1.5rem 0;
+      box-shadow: var(--shadow-sm);
+      margin-top: 90px;
+      padding: 70px 0 35px;
       color: var(--text-muted);
     }
-    footer small {
+    .footer-brand {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .footer-brand img {
+      height: 52px;
+    }
+    .footer-title {
+      color: var(--text-dark);
+      font-weight: 600;
+      margin-bottom: 1.3rem;
+    }
+    .footer-links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .footer-links li {
+      margin-bottom: 0.75rem;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    .footer-links a:hover {
+      color: var(--primary);
+      padding-right: 8px;
+    }
+    .social-icons a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: rgba(13, 110, 253, 0.08);
+      color: var(--primary);
+      border-radius: 50%;
+      margin-left: 12px;
+      font-size: 1.25rem;
+      transition: var(--transition);
+    }
+    .social-icons a:hover {
+      background: var(--primary);
+      color: white;
+      transform: translateY(-5px);
+    }
+    .footer-bottom {
+      border-top: 1px solid var(--glass-border);
+      padding-top: 28px;
+      margin-top: 55px;
       font-size: 0.9rem;
     }
 
-    /* انیمیشن‌های عمومی */
-    .hover-lift {
-      transition: var(--transition);
-    }
-    .hover-lift:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-md);
-    }
-
-    /* فلش‌ها و پیام‌ها */
-    .alert {
-      border-radius: var(--radius-md);
-      border: none;
-      box-shadow: var(--shadow-sm);
-      background: white;
-      border-right: 4px solid;
-    }
-    .alert-success {
-      border-right-color: #28a745;
-    }
-    .alert-danger {
-      border-right-color: #dc3545;
-    }
-    .alert-info {
-      border-right-color: var(--primary);
-    }
-
-    /* responsive */
+    /* ریسپانسیو */
     @media (max-width: 992px) {
-      .search-wrap {
-        max-width: 280px;
-      }
+      .search-wrap { max-width: 280px; }
     }
     @media (max-width: 768px) {
-      .brand span {
-        display: none;
-      }
-      .search-wrap {
-        display: none;
-      }
-      .btn-outline-secondary {
-        padding: 0.4rem 1rem;
-        font-size: 0.9rem;
-      }
+      .brand span { display: none; }
+      .search-wrap { display: none; }
     }
   </style>
 
-  <!-- Theme CSS اضافی (در صورت وجود) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
 
   {% block extra_head %}{% endblock %}
 </head>
 <body>
+
+  <!-- Loading Overlay -->
+  <div id="fullPageLoader" class="loading-overlay">
+    <div id="circularLoader"></div>
+  </div>
+
   {# helpers ایمن برای url_for #}
   {% macro safe_url_for(endpoint, filename=None) %}
     {% if endpoint_exists(endpoint) %}
@@ -281,7 +323,6 @@
     {% endif %}
   {% endmacro %}
 
-  {# defensive url_for helpers #}
   {% set home_url = url_for('wiki.index') if endpoint_exists('wiki.index') else '/' %}
   {% set discover_url = url_for('wiki.discover') if endpoint_exists('wiki.discover') else url_for('wiki.index') %}
   {% set edit_url = url_for('wiki.edit_page', page_slug='new') if endpoint_exists('wiki.edit_page') else '/edit/new' %}
@@ -340,7 +381,7 @@
               <li><hr class="dropdown-divider"></li>
 
               <li>
-                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') if endpoint_exists('auth.logout') else url_for('logout') if endpoint_exists('logout') else '#' }}">
+                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') if endpoint_exists('auth.logout') else '#' }}">
                   <i class="bi bi-box-arrow-right me-2"></i>خروج
                 </a>
               </li>
@@ -372,14 +413,74 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="site-footer text-center">
+  <!-- فوتر حرفه‌ای -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="row gy-5">
+        <!-- ستون برند -->
+        <div class="col-lg-4 col-md-6">
+          <a href="{{ home_url }}" class="footer-brand">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Azin.teb">
+            Azin.teb
+          </a>
+          <p class="mt-3 small" style="max-width: 290px;">
+            دانشنامه جامع پزشکی و سلامت — اطلاعات علمی دقیق، به‌روز و قابل اعتماد برای همه ایرانیان.
+          </p>
+        </div>
 
+        <!-- لینک‌های سریع -->
+        <div class="col-lg-2 col-md-6">
+          <h5 class="footer-title">لینک‌های سریع</h5>
+          <ul class="footer-links">
+            <li><a href="{{ home_url }}">خانه</a></li>
+            <li><a href="{{ discover_url }}">کاوش صفحات</a></li>
+            <li><a href="#">مقالات جدید</a></li>
+            <li><a href="#">تگ‌های پربازدید</a></li>
+          </ul>
+        </div>
+
+        <!-- Azin.teb -->
+        <div class="col-lg-3 col-md-6">
+          <h5 class="footer-title">Azin.teb</h5>
+          <ul class="footer-links">
+            <li><a href="#">درباره ما</a></li>
+            <li><a href="#">تماس با ما</a></li>
+            <li><a href="#">همکاری با پزشکان</a></li>
+            <li><a href="#">شرایط استفاده</a></li>
+            <li><a href="#">حریم خصوصی</a></li>
+          </ul>
+        </div>
+
+        <!-- ارتباط با ما -->
+        <div class="col-lg-3 col-md-6">
+          <h5 class="footer-title">ارتباط با ما</h5>
+          <p class="small mb-3">همیشه در خدمت شما هستیم</p>
+
+          <div class="social-icons mb-4">
+            <a href="#" target="_blank" title="تلگرام"><i class="bi bi-telegram"></i></a>
+            <a href="#" target="_blank" title="اینستاگرام"><i class="bi bi-instagram"></i></a>
+            <a href="#" target="_blank" title="لینکدین"><i class="bi bi-linkedin"></i></a>
+            <a href="#" target="_blank" title="یوتیوب"><i class="bi bi-youtube"></i></a>
+          </div>
+
+          <small class="text-muted">info@azin.teb</small>
+        </div>
+      </div>
+
+      <!-- کپی‌رایت -->
+      <div class="footer-bottom text-center">
+        <small>
+          © ۱۴۰۳ — ۱۴۰۴ Azin.teb | تمامی حقوق محفوظ است.
+          ساخته شده با ❤️ برای سلامت ایران
+        </small>
+      </div>
+    </div>
   </footer>
 
-  <!-- Bootstrap JS bundle -->
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- AOS برای انیمیشن اسکرول (اختیاری) -->
+  <!-- AOS -->
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script>
     AOS.init({
@@ -391,6 +492,7 @@
 
   <!-- main app js -->
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/circular-text.js') }}"></script>
 
   {% block extra_scripts %}{% endblock %}
 </body>

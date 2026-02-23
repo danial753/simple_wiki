@@ -1,0 +1,39 @@
+.circular-text {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 40px auto;
+  font-weight: 900;
+  font-size: 26px;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  transform-origin: 50% 50%;
+}
+
+.circular-text span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: 0 50%;
+  display: inline-block;
+  transition: all 0.4s cubic-bezier(0, 0, 0, 1);
+  white-space: pre;
+}
+
+.circular-text.spinning {
+  animation: spin 20s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.circular-text:hover {
+  animation-duration: 5s;   /* speedUp مثل React */
+}
+
+.circular-text.slow { animation-duration: 40s; }
+.circular-text.paused { animation-play-state: paused; }
