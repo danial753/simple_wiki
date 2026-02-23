@@ -1,5 +1,5 @@
 class CircularText {
-  constructor(elementId, text = "azin.teb", radius = 92) {
+  constructor(elementId, text = "azin.teb*", radius = 92) {
     this.element = document.getElementById(elementId);
     if (!this.element) return;
     
