@@ -7,10 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  // تنظیمات نهایی - نرم، سریع و تمیز
   const CONFIG = {
     particleCount: 185,
-    maxDistance: 185,
+    maxDistance: 165,
     speed: 2.5,              // حرکت سریع‌تر (طبق درخواست)
     particleRadius: 2.7,
     lineOpacity: 0.5,        // شفافیت خطوط
