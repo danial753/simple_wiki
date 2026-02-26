@@ -1,5 +1,5 @@
 // ============================================
-// main.js – نسخه نهایی با پشتیبانی از CSRF اختیاری
+// main.js – نسخه نهایی با پشتیبانی از CSRF اختیاری + فیکس‌های حذف کامنت
 // ============================================
 
 window.mainJsActive = true;
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const submitBtn = document.getElementById('comment-submit');
   const contentInput = document.getElementById('comment-content');
 
-  // pageName از meta یا URL (برای حذف)
+  // pageName از meta یا URL (برای حذف و سایر درخواست‌ها)
   let pageName = null;
   const metaPage = document.querySelector('meta[name="page-name"]');
   if (metaPage) {
@@ -47,10 +47,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
   window.pageName = pageName;
 
-  // توکن CSRF از meta (اختیاری)
+  // توکن CSRF از meta (اختیاری اما توصیه‌شده)
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
   if (!csrfToken) {
-    console.warn('⚠️ توکن CSRF یافت نشد. درخواست‌ها بدون ارسال توکن انجام خواهند شد.');
+    console.warn('⚠️ توکن CSRF یافت نشد. درخواست‌های POST ممکن است با خطای 403 مواجه شوند.');
   }
 
   // ---------- ارسال کامنت (با FormData) ----------
@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <a href="#" class="reply-link text-primary me-3" data-id="${comment.id}">پاسخ</a>
             ${canEdit ? `
               <a href="#" class="edit-comment-link text-warning me-3" data-id="${comment.id}">ویرایش</a>
-              <a href="#" class="delete-comment-link text-danger" data-id="${comment.id}">حذف</a>
+              <a href="#" class="js-comment-delete text-danger" data-id="${comment.id}">حذف</a>
             ` : ''}
           </div>
         </div>
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function () {
     _bodyClickListenerAttached = true;
 
     document.body.addEventListener('click', async function (e) {
-      const target = e.target.closest('.reply-link, .edit-comment-link, .delete-comment-link, #comment-cancel');
+      const target = e.target.closest('.reply-link, .edit-comment-link, .js-comment-delete, #comment-cancel');
       if (!target) return;
       e.preventDefault();
 
@@ -281,12 +281,19 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       // حذف (با آدرس /page/[pageName]/comment/[id]/delete)
-      if (link.classList.contains('delete-comment-link')) {
+      if (link.classList.contains('js-comment-delete')) {
         if (!confirm('آیا مطمئن هستید که می‌خواهید این نظر را حذف کنید؟')) return;
 
         // بررسی وجود pageName
         if (!window.pageName) {
-          alert('خطا: نام صفحه یافت نشد.');
+          alert('خطا: نام صفحه یافت نشد. لطفاً صفحه را رفرش کنید.');
+          return;
+        }
+
+        // چک نهایی برای جلوگیری از undefined یا id نامعتبر برای همیشه
+        if (!commentId || commentId === 'undefined' || commentId.trim() === '') {
+          console.error('commentId نامعتبر:', commentId, 'روی لینک:', link);
+          alert('خطا: شناسه کامنت پیدا نشد یا نامعتبر است. لطفاً صفحه را رفرش کنید.');
           return;
         }
 
@@ -310,6 +317,22 @@ document.addEventListener('DOMContentLoaded', function () {
           }
 
           const data = await response.json();
+
+          // چک وضعیت‌های خاص سرور (بهبود امنیت و تجربه کاربری)
+          if (response.status === 403) {
+            alert('شما اجازه حذف این کامنت را ندارید (شاید لاگ‌اوت شدید یا مجوز ندارید؟)');
+            return;
+          }
+          if (response.status === 404) {
+            alert('کامنت پیدا نشد یا قبلاً حذف شده است.');
+            const commentDiv = document.getElementById(`comment-${commentId}`);
+            if (commentDiv) commentDiv.remove(); // پاک کردن از UI حتی اگر سرور 404 داد
+            return;
+          }
+          if (response.status >= 500) {
+            alert('خطای سرور رخ داده است. لطفاً بعداً امتحان کنید.');
+            return;
+          }
 
           if (response.ok && data.success) {
             const commentDiv = document.getElementById(`comment-${commentId}`);

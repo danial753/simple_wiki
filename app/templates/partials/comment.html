@@ -3,42 +3,51 @@
     {% for c in root_comments %}
       <div class="comment mb-4 p-3 border rounded bg-light" id="comment-{{ c.id }}">
         <div class="d-flex align-items-start">
-          <img src="{{ url_for('wiki.uploaded_file', filename=c.user.avatar) if c.user.avatar else url_for('static', filename='images/default_avatar.png') }}"
+          <!-- Avatar (Django style) -->
+          <img src="{% if c.user.avatar %}/uploads/{{ c.user.avatar }}{% else %}{% static 'images/default_avatar.png' %}{% endif %}"
                alt="{{ c.user.username }}" class="rounded-circle me-3" width="48" height="48" style="object-fit: cover;">
 
           <div class="flex-grow-1">
             <div class="d-flex justify-content-between align-items-baseline mb-1">
               <strong class="text-dark">{{ c.user.username }}</strong>
-              <small class="text-muted">{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+              <small class="text-muted">{{ c.created_at|date:"Y-m-d H:i" }}</small>
             </div>
 
-            <div class="comment-body mb-2">{{ c.content | safe | nl2br }}</div>
+            <div class="comment-body mb-2">{{ c.content|safe|linebreaksbr }}</div>
 
             <div class="small">
-              {% if current_user.is_authenticated %}
+              {% if user.is_authenticated %}
                 <a href="#" class="reply-link text-primary me-3" data-id="{{ c.id }}">پاسخ</a>
               {% endif %}
 
-              {% if current_user.is_authenticated and (current_user.id == c.user_id or current_user.role == 'admin') %}
-                <a href="#" class="edit-comment-link text-warning me-3" data-id="{{ c.id }}">ویرایش</a>
-                <a href="#" class="delete-comment-link text-danger" data-id="{{ c.id }}">حذف</a>
+              {% if user.is_authenticated and (user == c.user or user.is_staff) %}
+                <a href="#" class="js-comment-delete text-danger" data-id="${comment.id}">حذف</a>
               {% endif %}
             </div>
 
+            <!-- Children -->
             {% if c.children %}
               <div class="ms-5 mt-3 border-start ps-3">
                 {% for ch in c.children %}
-                  <div class="comment mb-3 p-3 border rounded bg-white">
+                  <div class="comment mb-3 p-3 border rounded bg-white" id="comment-{{ ch.id }}">
                     <div class="d-flex align-items-start">
-                      <img src="{{ url_for('wiki.uploaded_file', filename=ch.user.avatar) if ch.user.avatar else url_for('static', filename='images/default_avatar.png') }}"
+                      <img src="{% if ch.user.avatar %}/uploads/{{ ch.user.avatar }}{% else %}{% static 'images/default_avatar.png' %}{% endif %}"
                            alt="{{ ch.user.username }}" class="rounded-circle me-3" width="40" height="40" style="object-fit: cover;">
 
                       <div class="flex-grow-1">
                         <div class="d-flex justify-content-between align-items-baseline mb-1">
                           <strong>{{ ch.user.username }}</strong>
-                          <small class="text-muted">{{ ch.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                          <small class="text-muted">{{ ch.created_at|date:"Y-m-d H:i" }}</small>
                         </div>
-                        <div class="comment-body mb-2">{{ ch.content | safe | nl2br }}</div>
+                        <div class="comment-body mb-2">{{ ch.content|safe|linebreaksbr }}</div>
+
+                        {% if user.is_authenticated and (user == ch.user or user.is_staff) %}
+                          <a href="#" class="js-comment-delete text-danger"
+                             data-comment-id="{{ ch.id }}"
+                             data-page-slug="{{ page.slug }}">
+                             حذف
+                          </a>
+                        {% endif %}
                       </div>
                     </div>
                   </div>
@@ -55,3 +64,8 @@
     </div>
   {% endif %}
 </div>
+
+<!-- خیلی مهم! -->
+<script>
+  window.currentPageSlug = "{{ page.slug }}";   <!-- JS از این استفاده می‌کنه -->
+</script>

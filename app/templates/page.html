@@ -14,97 +14,110 @@
 
 {% block content %}
 <div class="container py-5">
-  <div class="row">
-    <div class="col-xl-10 mx-auto">
+  <div class="row justify-content-center">
+    <div class="col-xl-10 col-lg-11">
 
-      <article class="card border-0 rounded-4 overflow-hidden shadow-lg" data-aos="fade-up">
+      <article class="card border-0 rounded-4 overflow-hidden shadow-xl bg-white mb-5" data-aos="fade-up">
 
-        {# === هدر / هیرو با تصویر شاخص === #}
+        {# === هیرو با تصویر شاخص === #}
         {% if feature_image %}
-        <div class="position-relative hero-wrapper" data-aos="fade-down">
-          <img src="{{ feature_image_url }}" alt="{{ title or page_name }}" class="w-100 hero-img" loading="lazy">
-          <div class="hero-gradient"></div>
-          <div class="hero-content container">
-            <div class="row align-items-end">
-              <div class="col-md-9">
-                <h1 class="display-4 fw-bold text-white mb-2 animate__animated animate__fadeInUp">{{ title or page_name }}</h1>
+        <div class="position-relative hero-wrapper overflow-hidden" data-aos="fade-down">
+          <img src="{{ feature_image_url }}" alt="{{ title or page_name }}" class="w-100 hero-img object-fit-cover" loading="lazy">
+          <div class="hero-gradient position-absolute inset-0"></div>
+          <div class="hero-content position-absolute bottom-0 start-0 end-0 p-5 text-white">
+            <div class="row align-items-end g-4">
+              <div class="col-lg-9">
+                <h1 class="display-4 fw-extrabold mb-3 drop-shadow-xl">{{ title or page_name }}</h1>
                 {% if subtitle %}
-                  <p class="h5 text-white-75 mb-3 animate__animated animate__fadeInUp animate__delay-1s">{{ subtitle }}</p>
+                  <p class="lead text-white-80 mb-4">{{ subtitle }}</p>
                 {% endif %}
                 {% if excerpt %}
-                  <p class="text-white-50 mb-0 animate__animated animate__fadeInUp animate__delay-2s">{{ excerpt }}</p>
+                  <p class="text-white-70 mb-0 fs-5">{{ excerpt }}</p>
                 {% endif %}
               </div>
-              <div class="col-md-3 text-md-end mt-4 mt-md-0">
-                <div class="d-inline-block bg-dark bg-opacity-25 backdrop-blur px-3 py-2 rounded-3 small text-white border border-white border-opacity-25">
-                  <i class="bi bi-link-45deg me-1"></i> <code>{{ page_name }}</code>
+              <div class="col-lg-3 text-lg-end">
+                <div class="d-inline-flex align-items-center gap-3 bg-dark bg-opacity-50 backdrop-blur-lg px-4 py-3 rounded-pill shadow-lg">
+                  <i class="bi bi-link-45deg fs-4"></i>
+                  <code class="text-white m-0 small">{{ page_name }}</code>
                 </div>
               </div>
             </div>
           </div>
         </div>
         {% else %}
-        <div class="card-body border-0 bg-gradient-light p-4">
-          <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div class="card-body bg-gradient-light p-5 border-bottom border-4 border-primary rounded-top-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-start gap-4">
             <div>
-              <h1 class="h2 fw-bold mb-2 text-primary">{{ title or page_name }}</h1>
-              {% if subtitle %}<p class="text-muted mb-2 fs-5">{{ subtitle }}</p>{% endif %}
-              {% if excerpt %}<p class="text-muted small mb-0">{{ excerpt }}</p>{% endif %}
+              <h1 class="display-5 fw-bold text-primary mb-3">{{ title or page_name }}</h1>
+              {% if subtitle %}<p class="lead text-muted mb-3">{{ subtitle }}</p>{% endif %}
+              {% if excerpt %}<p class="text-muted fs-5">{{ excerpt }}</p>{% endif %}
             </div>
-            <div class="text-end small text-muted bg-white px-3 py-2 rounded-3 shadow-sm">
-              <i class="bi bi-tag me-1"></i> <code>{{ page_name }}</code>
+            <div class="bg-white px-5 py-3 rounded-pill shadow-lg d-flex align-items-center gap-3">
+              <i class="bi bi-tag text-primary fs-4"></i>
+              <code class="text-dark small m-0">{{ page_name }}</code>
             </div>
           </div>
         </div>
         {% endif %}
 
-        <div class="card-body p-4 p-lg-5">
+        <div class="card-body p-5">
           {# تگ‌ها + متادیتا #}
-          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-5 pb-2 border-bottom border-2 border-light">
-            <div class="d-flex align-items-center gap-2 flex-wrap">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-4 mb-5 pb-4 border-bottom border-3 border-light-subtle">
+            <div class="d-flex align-items-center flex-wrap gap-3">
               {% set effective_tags = tags or (page_meta.tags.split(',')|map('trim')|list if page_meta and page_meta.tags else []) %}
               {% if effective_tags %}
-                <div class="d-flex flex-wrap gap-2">
-                  <i class="bi bi-tags-fill text-primary"></i>
-                  {% for t in effective_tags %}
-                    <a href="{{ url_for('wiki.discover', tag=t) }}" class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2 text-decoration-none hover-scale">
-                      <i class="bi bi-hash me-1"></i>{{ t }}
-                    </a>
-                  {% endfor %}
+                <div class="d-flex align-items-center gap-3">
+                  <i class="bi bi-tags-fill text-primary fs-4"></i>
+                  <div class="d-flex flex-wrap gap-2">
+                    {% for t in effective_tags %}
+                      <a href="{{ url_for('wiki.discover', tag=t) }}"
+                         class="badge bg-primary-subtle text-primary px-4 py-2 rounded-pill fs-6 hover-lift transition-all shadow-sm">
+                        {{ t }}
+                      </a>
+                    {% endfor %}
+                  </div>
                 </div>
               {% endif %}
             </div>
 
-            <div class="d-flex gap-3 small text-muted align-items-center">
+            <div class="d-flex flex-wrap gap-3 small text-muted align-items-center">
               {% if page_meta and page_meta.updated_at %}
-                <div class="bg-light px-3 py-1 rounded-3"><i class="bi bi-calendar3 me-1"></i>{{ page_meta.updated_at.strftime("%Y-%m-%d") }}</div>
+                <div class="bg-light px-4 py-2 rounded-pill shadow-sm d-flex align-items-center gap-2">
+                  <i class="bi bi-calendar3 text-primary"></i>
+                  {{ page_meta.updated_at.strftime("%Y-%m-%d") }}
+                </div>
               {% endif %}
-              <div class="bg-light px-3 py-1 rounded-3"><i class="bi bi-file-text me-1"></i>{{ content|striptags|length }} کاراکتر</div>
+              <div class="bg-light px-4 py-2 rounded-pill shadow-sm d-flex align-items-center gap-2">
+                <i class="bi bi-file-text text-primary"></i>
+                {{ content|striptags|length }} کاراکتر
+              </div>
             </div>
           </div>
 
           {# افراد کلیدی / تیم #}
           {% if personnel and personnel|length > 0 %}
-          <section class="mb-5" data-aos="fade-up">
-            <h5 class="mb-4 fw-bold text-dark section-title position-relative pb-2"><i class="bi bi-people-fill me-2 text-primary"></i>افراد کلیدی / تیم</h5>
+          <section class="mb-5 pb-5 border-bottom border-light" data-aos="fade-up">
+            <h5 class="mb-4 fw-bold text-dark section-title position-relative pb-3">
+              <i class="bi bi-people-fill me-2 text-primary fs-4"></i>افراد کلیدی / تیم
+            </h5>
             <div class="row g-4">
               {% for p in personnel %}
-              <div class="col-sm-6 col-lg-4 col-xl-3" data-aos="zoom-in" data-aos-delay="{{ loop.index * 50 }}">
-                <div class="card h-100 border-0 shadow-sm hover-lift rounded-4 overflow-hidden">
+              <div class="col-sm-6 col-lg-4 col-xl-3" data-aos="zoom-in" data-aos-delay="{{ loop.index * 60 }}">
+                <div class="card h-100 border-0 shadow-lg hover-lift rounded-4 overflow-hidden transition-all">
                   <div class="card-body text-center p-4">
-                    <div class="position-relative mb-3">
-                      <div class="avatar-wrapper mx-auto">
-                        {% if p.avatar %}
-                          <img src="{{ url_for('wiki.uploaded_file', filename=p.avatar) }}" alt="{{ p.name or 'عضو تیم' }}" class="rounded-circle border border-3 border-primary object-fit-cover" width="96" height="96">
-                        {% else %}
-                          <img src="{{ url_for('static', filename='images/avatar.png') }}" alt="default" class="rounded-circle border border-3 border-secondary object-fit-cover" width="96" height="96">
-                        {% endif %}
-                        <span class="status-dot bg-success position-absolute bottom-0 end-0 rounded-circle border border-2 border-white"></span>
-                      </div>
+                    <div class="position-relative mb-4 mx-auto" style="width: 130px; height: 130px;">
+                      {% if p.avatar %}
+                        <img src="{{ url_for('wiki.uploaded_file', filename=p.avatar) }}" alt="{{ p.name or 'عضو تیم' }}"
+                             class="rounded-circle border-4 border-primary shadow object-fit-cover w-100 h-100">
+                      {% else %}
+                        <img src="{{ url_for('static', filename='images/avatar.png') }}" alt="default"
+                             class="rounded-circle border-4 border-secondary shadow object-fit-cover w-100 h-100">
+                      {% endif %}
+                      <span class="position-absolute bottom-0 end-0 bg-success rounded-circle border border-4 border-white" style="width:22px;height:22px;"></span>
                     </div>
-                    <h6 class="fw-bold mb-1">{{ p.name or p.username or '—' }}</h6>
-                    {% if p.role %}<span class="badge bg-primary-soft text-primary mb-2">{{ p.role }}</span>{% endif %}
-                    {% if p.desc %}<p class="small text-muted mt-2">{{ p.desc }}</p>{% endif %}
+                    <h6 class="fw-bold mb-2 fs-5">{{ p.name or p.username or '—' }}</h6>
+                    {% if p.role %}<span class="badge bg-primary-subtle text-primary px-4 py-2 mb-3 d-inline-block fs-6">{{ p.role }}</span>{% endif %}
+                    {% if p.desc %}<p class="small text-muted lh-base mt-2">{{ p.desc }}</p>{% endif %}
                   </div>
                 </div>
               </div>
@@ -115,21 +128,21 @@
 
           {# گالری تصاویر #}
           {% if gallery and gallery|length > 0 %}
-          <section class="mb-5" data-aos="fade-up">
-            <h5 class="mb-4 fw-bold text-dark section-title position-relative pb-2"><i class="bi bi-images me-2 text-primary"></i>گالری تصاویر</h5>
+          <section class="mb-5 pb-5 border-bottom border-light" data-aos="fade-up">
+            <h5 class="mb-4 fw-bold text-dark section-title position-relative pb-3">
+              <i class="bi bi-images me-2 text-primary fs-4"></i>گالری تصاویر
+            </h5>
             <div class="row g-3">
               {% for img in gallery %}
-              <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="{{ loop.index * 30 }}">
-                <a href="#" class="gallery-item d-block rounded-4 overflow-hidden shadow-sm hover-zoom"
-                   data-type="image"
-                   data-src="{{ url_for('wiki.uploaded_file', filename=img) }}">
+              <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
+                <a href="#" class="gallery-item d-block rounded-4 overflow-hidden shadow-lg hover-zoom position-relative transition-all"
+                   data-type="image" data-src="{{ url_for('wiki.uploaded_file', filename=img) }}">
                   <img src="{{ url_for('wiki.uploaded_file', filename=img) }}"
-                       alt="تصویر گالری"
-                       class="img-fluid w-100"
-                       loading="lazy"
-                       style="height:180px; object-fit:cover;">
-                  <div class="gallery-overlay d-flex align-items-center justify-content-center">
-                    <i class="bi bi-arrows-fullscreen text-white fs-3"></i>
+                       alt="تصویر گالری {{ loop.index }}"
+                       class="img-fluid w-100 ratio-1x1 object-fit-cover"
+                       loading="lazy">
+                  <div class="gallery-overlay position-absolute inset-0 d-flex align-items-center justify-content-center bg-black bg-opacity-60 opacity-0 transition">
+                    <i class="bi bi-arrows-fullscreen text-white fs-4"></i>
                   </div>
                 </a>
               </div>
@@ -140,20 +153,24 @@
 
           {# ویدیوها #}
           {% if videos and videos|length > 0 %}
-          <section class="mb-5" data-aos="fade-up">
-            <h5 class="mb-4 fw-bold text-dark section-title position-relative pb-2"><i class="bi bi-camera-reels me-2 text-primary"></i>ویدیوها</h5>
+          <section class="mb-5 pb-5 border-bottom border-light" data-aos="fade-up">
+            <h5 class="mb-4 fw-bold text-dark section-title position-relative pb-3">
+              <i class="bi bi-camera-reels me-2 text-primary fs-4"></i>ویدیوها
+            </h5>
             <div class="row g-4">
               {% for v in videos %}
-              <div class="col-md-6" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden hover-scale">
+              <div class="col-md-6" data-aos="fade-up" data-aos-delay="{{ loop.index * 70 }}">
+                <div class="card border-0 shadow-xl rounded-4 overflow-hidden hover-lift transition-all">
                   <div class="ratio ratio-16x9 bg-dark">
                     <video controls preload="metadata" class="w-100 h-100 object-fit-cover">
                       <source src="{{ url_for('wiki.stream_video', filename=v) }}" type="video/mp4">
                       مرورگر شما از پخش ویدیو پشتیبانی نمی‌کند.
                     </video>
                   </div>
-                  <div class="card-body bg-light">
-                    <p class="mb-0 small text-truncate"><i class="bi bi-play-circle-fill text-primary me-2"></i>{{ v }}</p>
+                  <div class="card-body bg-light-subtle py-3 px-4">
+                    <p class="mb-0 small text-truncate text-muted d-flex align-items-center gap-2">
+                      <i class="bi bi-play-circle-fill text-primary fs-5"></i>{{ v }}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -164,126 +181,168 @@
 
           {# محتوای اصلی #}
           <section class="content-body mb-5 lh-lg" data-aos="fade-up">
-            <h5 class="mb-4 fw-bold text-dark section-title position-relative pb-2"><i class="bi bi-file-richtext me-2 text-primary"></i>محتوای اصلی</h5>
-            <div class="card border-0 bg-light p-4 rounded-4 shadow-sm">
-              {{ content | safe }}
+            <h5 class="mb-4 fw-bold text-dark section-title position-relative pb-3">
+              <i class="bi bi-file-richtext me-2 text-primary fs-4"></i>محتوای اصلی
+            </h5>
+            <div class="card border-0 bg-light-subtle p-5 rounded-4 shadow-lg content-card">
+              <div class="prose prose-lg max-w-none prose-headings:text-primary prose-a:text-primary hover:prose-a:underline">
+                {{ content | safe }}
+              </div>
             </div>
           </section>
 
           {# دکمه‌های اقدام #}
-          <div class="d-flex flex-wrap gap-3 mb-5 align-items-center">
+          <div class="d-flex flex-wrap gap-4 mb-5 justify-content-center justify-content-md-start">
             {% if current_user.is_authenticated and current_user.role in ['admin', 'editor'] %}
-              <a href="{{ url_for('wiki.edit_page', page_slug=page_name) }}" class="btn btn-outline-primary rounded-pill px-4 hover-scale">
-                <i class="bi bi-pencil-square me-2"></i> ویرایش صفحه
+              <a href="{{ url_for('wiki.edit_page', page_slug=page_name) }}"
+                 class="btn btn-outline-primary btn-lg rounded-pill px-5 py-3 hover-lift shadow-lg transition-all">
+                <i class="bi bi-pencil-square me-2 fs-5"></i> ویرایش صفحه
               </a>
             {% endif %}
 
             {% if current_user.is_authenticated and current_user.role == 'admin' %}
-              <button id="btn-delete-page" data-slug="{{ page_name }}" class="btn btn-outline-danger rounded-pill px-4 hover-scale">
-                <i class="bi bi-trash3 me-2"></i> حذف صفحه
+              <button id="btn-delete-page" data-slug="{{ page_name }}"
+                      class="btn btn-outline-danger btn-lg rounded-pill px-5 py-3 hover-lift shadow-lg transition-all">
+                <i class="bi bi-trash3 me-2 fs-5"></i> حذف صفحه
               </button>
             {% endif %}
-
-
           </div>
-
-          {# بخش نظرات #}
-          <section id="comments" class="mt-5" data-aos="fade-up">
-            <h4 class="mb-4 fw-bold text-dark section-title position-relative pb-2"><i class="bi bi-chat-dots me-2 text-primary"></i>نظرات کاربران</h4>
-
-            <div id="comments-list" class="mb-4">
-  {% if root_comments %}
-    {% for c in root_comments %}
-      {% if not c.deleted %}
-        <div class="comment mb-4 p-4 border-0 bg-light rounded-4 shadow-sm hover-shadow" id="comment-{{ c.id }}" data-aos="fade-up" data-aos-delay="{{ loop.index * 30 }}">
-          <div class="d-flex align-items-start gap-3">
-            <img src="{% if c.user.avatar %}{{ url_for('wiki.uploaded_file', filename=c.user.avatar) }}{% else %}{{ url_for('static', filename='images/avatar.png') }}{% endif %}"
-                 alt="{{ c.user.username }}"
-                 class="rounded-circle border border-2 border-primary object-fit-cover"
-                 width="56" height="56"
-                 onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/avatar.png') }}'">
-            <div class="flex-grow-1">
-              <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
-                <div>
-                  <strong class="text-dark fs-6">{{ c.user.username }}</strong>
-                  <span class="badge bg-primary-soft text-primary me-2">کاربر</span>
-                  <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ c.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                </div>
-                <div class="small">
-                  {% if current_user.is_authenticated %}
-                    <a href="#" class="reply-link text-primary me-3 text-decoration-none"><i class="bi bi-reply me-1"></i>پاسخ</a>
-                  {% endif %}
-                  {% if current_user.is_authenticated and (current_user.id == c.user_id or current_user.role == 'admin') %}
-                    <a href="#" class="edit-comment-link text-warning me-3 text-decoration-none"><i class="bi bi-pencil me-1"></i>ویرایش</a>
-                    <a href="#" class="delete-comment-link text-danger text-decoration-none"><i class="bi bi-trash3 me-1"></i>حذف</a>
-                  {% endif %}
-                </div>
-              </div>
-              <div class="comment-body mb-3 p-3 bg-white rounded-3">{{ c.content | safe | replace('\n', '<br>') }}</div>
-
-              {% if c.children %}
-                <div class="ms-4 mt-3">
-                  {% for ch in c.children %}
-                    {% if not ch.deleted %}
-                      <div class="comment-reply mb-3 p-3 border-0 bg-white rounded-3 shadow-sm" data-aos="fade-right">
-                        <div class="d-flex align-items-start gap-2">
-                          <img src="{% if ch.user.avatar %}{{ url_for('wiki.uploaded_file', filename=ch.user.avatar) }}{% else %}{{ url_for('static', filename='images/avatar.png') }}{% endif %}"
-                               alt="{{ ch.user.username }}"
-                               class="rounded-circle border object-fit-cover"
-                               width="40" height="40"
-                               onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/avatar.png') }}'">
-                          <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                              <div>
-                                <strong class="small">{{ ch.user.username }}</strong>
-                                <small class="text-muted me-2"><i class="bi bi-clock me-1"></i>{{ ch.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                              </div>
-                            </div>
-                            <div class="small">{{ ch.content | safe | replace('\n', '<br>') }}</div>
-                          </div>
-                        </div>
-                      </div>
-                    {% endif %}
-                  {% endfor %}
-                </div>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      {% endif %}
-    {% endfor %}
-  {% else %}
-    <div class="alert alert-light border text-center py-5 rounded-4">
-      <i class="bi bi-chat-dots display-1 text-muted mb-3"></i>
-      <p class="h5 text-muted">هنوز نظری ثبت نشده است. اولین نظر را شما بنویسید!</p>
-    </div>
-  {% endif %}
-</div>
-
-            {% if current_user.is_authenticated %}
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-gradient-light">
-              <form id="comment-form" action="{{ url_for('wiki.add_comment', page_name=page_name) }}" method="post">
-                <textarea name="content" id="comment-content" class="form-control border-0 bg-white rounded-3 p-3 mb-3 shadow-sm" rows="4" placeholder="نظر خود را اینجا بنویسید..." required></textarea>
-                <input type="hidden" name="parent_id" id="comment-parent-id" value="">
-                <div class="d-flex gap-2">
-                  <button type="submit" id="comment-submit" class="btn btn-primary rounded-pill px-5 hover-scale">
-                    <i class="bi bi-send me-2"></i> ارسال نظر
-                  </button>
-                  <button type="button" id="comment-cancel" class="btn btn-outline-secondary rounded-pill px-4 hover-scale" style="display:none;">
-                    <i class="bi bi-x-lg me-2"></i> انصراف
-                  </button>
-                </div>
-              </form>
-            </div>
-            {% else %}
-              <div class="alert alert-info border-0 rounded-4 p-4">
-                <i class="bi bi-info-circle-fill me-2"></i>
-                برای ثبت نظر لطفاً <a href="{{ url_for('auth.login') }}" class="alert-link fw-bold">وارد شوید</a>.
-              </div>
-            {% endif %}
-          </section>
         </div>
       </article>
+
+      {# بخش کامنت‌ها – با نوار درخشان چرخان آبی (دقیقاً مثل کارت محصول) #}
+      <section id="comments" class="mt-5 pt-5" data-aos="fade-up">
+        <h4 class="mb-5 fw-bold text-dark text-center text-md-start section-title position-relative pb-3">
+          <i class="bi bi-chat-dots-fill me-2 text-primary fs-3"></i>نظرات کاربران
+        </h4>
+
+        <div id="comments-list" class="mb-5">
+          {% if root_comments %}
+            {% for c in root_comments %}
+              {% if not c.deleted %}
+                <div class="comment mb-5 rounded-4 bg-white bg-opacity-92 backdrop-blur-lg border border-white border-opacity-20 shadow-xl hover:shadow-2xl transition-all" id="comment-{{ c.id }}" data-aos="fade-up" data-aos-delay="{{ loop.index * 40 }}">
+                  <div class="d-flex align-items-start gap-4">
+                    <img src="{% if c.user.avatar %}{{ url_for('wiki.uploaded_file', filename=c.user.avatar) }}{% else %}{{ url_for('static', filename='images/avatar.png') }}{% endif %}"
+                         alt="{{ c.user.username }}"
+                         class="rounded-circle border-4 border-primary object-fit-cover shadow-md"
+                         width="72" height="72"
+                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/avatar.png') }}'">
+                    <div class="flex-grow-1 max-w-full overflow-hidden">
+                      <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                          <strong class="text-dark fs-5">{{ c.user.username }}</strong>
+                          <span class="badge bg-primary-subtle text-primary px-3 py-2 fs-6">کاربر</span>
+                        </div>
+                        <small class="text-muted d-flex align-items-center gap-2">
+                          <i class="bi bi-clock fs-5"></i> {{ c.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </small>
+                      </div>
+
+                      {# کادر متن با نوار درخشان چرخان آبی #}
+                      <div class="comment-text-box p-4 rounded-3 bg-gray-50 bg-opacity-98 backdrop-blur-sm border border-gray-200 shadow-inner lh-lg fs-6 relative overflow-hidden">
+                        <div class="comment-glow-border"></div>
+                        {{ c.content | safe | replace('\n', '<br>') }}
+                      </div>
+
+                      <div class="d-flex flex-wrap gap-4 mt-4 small">
+                        {% if current_user.is_authenticated %}
+                          <a href="#" class="reply-link text-primary text-decoration-none d-flex align-items-center gap-2 fs-6 hover:text-primary-dark">
+                            <i class="bi bi-reply fs-5"></i> پاسخ
+                          </a>
+                        {% endif %}
+                        {% if current_user.is_authenticated and (current_user.id == c.user_id or current_user.role == 'admin') %}
+                          <a href="#" class="edit-comment-link text-warning text-decoration-none d-flex align-items-center gap-2 fs-6 hover:text-warning-dark">
+                            <i class="bi bi-pencil fs-5"></i> ویرایش
+                          </a>
+                          <a href="#" class="js-comment-delete text-danger text-decoration-none d-flex align-items-center gap-2 fs-6 hover:text-danger-dark"
+                             data-id="{{ c.id }}"
+                             data-page-name="{{ page_name }}">
+                            <i class="bi bi-trash3 fs-5"></i> حذف
+                          </a>
+                        {% endif %}
+                      </div>
+
+                      {% if c.children %}
+                        <div class="mt-5 ps-5 border-start border-4 border-primary-subtle">
+                          {% for ch in c.children %}
+                            {% if not ch.deleted %}
+                              <div class="comment-reply mt-4 p-4 bg-light-subtle rounded-4 shadow-sm transition-all" data-aos="fade-right">
+                                <div class="d-flex align-items-start gap-3">
+                                  <img src="{% if ch.user.avatar %}{{ url_for('wiki.uploaded_file', filename=ch.user.avatar) }}{% else %}{{ url_for('static', filename='images/avatar.png') }}{% endif %}"
+                                       alt="{{ ch.user.username }}"
+                                       class="rounded-circle border object-fit-cover shadow-sm"
+                                       width="56" height="56"
+                                       onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/avatar.png') }}'">
+                                  <div class="flex-grow-1 max-w-full overflow-hidden">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                      <strong class="small text-dark">{{ ch.user.username }}</strong>
+                                      <small class="text-muted d-flex align-items-center gap-2">
+                                        <i class="bi bi-clock"></i> {{ ch.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                      </small>
+                                    </div>
+                                    <div class="comment-text-box small p-3 bg-gray-50 bg-opacity-98 backdrop-blur-sm rounded-3 border border-gray-200 shadow-inner">
+                                      <div class="comment-glow-border"></div>
+                                      {{ ch.content | safe | replace('\n', '<br>') }}
+                                    </div>
+
+                                    {% if current_user.is_authenticated and (current_user.id == ch.user_id or current_user.role == 'admin') %}
+                                      <div class="mt-3">
+                                        <a href="#" class="js-comment-delete text-danger text-decoration-none small d-flex align-items-center gap-2 hover:text-danger-dark">
+                                          <i class="bi bi-trash3"></i> حذف
+                                        </a>
+                                      </div>
+                                    {% endif %}
+                                  </div>
+                                </div>
+                              </div>
+                            {% endif %}
+                          {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <div class="alert alert-light border text-center py-5 rounded-4 bg-white bg-opacity-85 backdrop-blur-sm shadow-sm">
+              <i class="bi bi-chat-dots display-1 text-muted mb-3"></i>
+              <p class="h5 text-muted">هنوز نظری ثبت نشده است. اولین نظر را شما بنویسید!</p>
+            </div>
+          {% endif %}
+        </div>
+
+        {# فرم ثبت نظر جدید #}
+        {% if current_user.is_authenticated %}
+        <div class="mt-5 p-5 rounded-4 bg-white bg-opacity-94 backdrop-blur-lg border border-white border-opacity-30 shadow-2xl">
+          <h5 class="mb-4 fw-bold text-primary text-center fs-4">
+            <i class="bi bi-pencil-square me-2 fs-5"></i>نظر جدید خود را بنویسید
+          </h5>
+          <form id="comment-form" action="{{ url_for('wiki.add_comment', page_name=page_name) }}" method="post">
+            <textarea name="content" id="comment-content"
+                      class="form-control border-primary bg-white rounded-3 p-4 mb-4 shadow-inner fs-5 resize-y"
+                      rows="6" placeholder="نظر خود را اینجا بنویسید..." required></textarea>
+            <input type="hidden" name="parent_id" id="comment-parent-id" value="">
+            <div class="d-flex flex-wrap gap-3 justify-content-center">
+              <button type="submit" id="comment-submit" class="btn btn-primary btn-lg rounded-pill px-5 py-3 hover-lift shadow-lg transition-all">
+                <i class="bi bi-send-fill me-2 fs-5"></i> ارسال نظر
+              </button>
+              <button type="button" id="comment-cancel" class="btn btn-outline-secondary btn-lg rounded-pill px-5 py-3 hover-lift shadow-lg transition-all" style="display:none;">
+                <i class="bi bi-x-lg me-2 fs-5"></i> انصراف
+              </button>
+            </div>
+          </form>
+        </div>
+        {% else %}
+        <div class="alert alert-info border-0 rounded-4 p-5 text-center mt-5 bg-white bg-opacity-90 backdrop-blur-lg shadow-xl">
+          <i class="bi bi-info-circle-fill display-4 mb-4 d-block text-info"></i>
+          <p class="h4 mb-4">برای ثبت نظر لطفاً وارد شوید</p>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg rounded-pill px-5 py-3 hover-lift shadow-lg">
+            ورود / ثبت‌نام
+          </a>
+        </div>
+        {% endif %}
+      </section>
     </div>
   </div>
 </div>
@@ -333,23 +392,19 @@
   }
 
   .hero-gradient {
-    position: absolute;
-    inset: 0;
     background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 90%);
   }
 
   .hero-content {
-    position: absolute;
-    inset: auto 0 0 0;
-    padding: 3rem 2rem;
+    padding: 3rem 2rem 5rem;
   }
 
   .backdrop-blur {
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(10px);
   }
 
   .section-title {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
     letter-spacing: -0.01em;
   }
 
@@ -358,10 +413,10 @@
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 60px;
-    height: 4px;
-    background: linear-gradient(90deg, var(--bs-primary), #a78bfa);
-    border-radius: 4px;
+    width: 80px;
+    height: 5px;
+    background: linear-gradient(90deg, var(--bs-primary), #2596be);
+    border-radius: 5px;
   }
 
   .hover-scale {
@@ -369,53 +424,8 @@
   }
 
   .hover-scale:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.12) !important;
-  }
-
-  .hover-lift {
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-8px);
+    transform: translateY(-4px) scale(1.03);
     box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
-  }
-
-  .hover-zoom {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hover-zoom img {
-    transition: transform 0.6s ease;
-  }
-
-  .hover-zoom:hover img {
-    transform: scale(1.1);
-  }
-
-  .hover-zoom .gallery-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .hover-zoom:hover .gallery-overlay {
-    opacity: 1;
-  }
-
-  .bg-primary-soft {
-    background: rgba(13, 110, 253, 0.1);
-  }
-
-  .bg-gradient-light {
-    background: linear-gradient(135deg, #ffffff, #f8fafc);
   }
 
   .avatar-wrapper {
@@ -432,61 +442,104 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   }
 
+  /* افکت نوار درخشان چرخان آبی – دقیقاً مثل کارت محصول */
   .comment {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255,255,255,0.94);
+    backdrop-filter: blur(8px);
+    border-radius: 1rem;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  }
+
+  .comment::before {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    background: linear-gradient(90deg, transparent, #2596be, #2596be, #2596be, transparent);
+    animation: rotation_481 5000ms infinite linear;
+    z-index: -1;
+    pointer-events: none;
   }
 
   .comment:hover {
-    background: #ffffff !important;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+  }
+
+  /* کادر متن کامنت – ملایم و بدون خروج متن */
+  .comment-text-box {
+    word-break: break-all !important;
+    overflow-wrap: anywhere !important;
+    hyphens: auto;
+    white-space: pre-wrap;
+    max-width: 100% !important;
+    overflow-x: auto;
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 1.25rem;
+    background: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.04);
+    line-height: 1.8;
+    font-size: 1.05rem;
+    color: #2d3748;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+  }
+
+  .comment-reply .comment-text-box {
+    background: #fdfdfd;
+    border-color: #e2e8f0;
+    font-size: 0.95rem;
+    padding: 1rem;
+    max-height: 400px;
   }
 
   .comment-reply {
-    border-right: 3px solid var(--bs-primary) !important;
+    border-right: 4px solid var(--bs-primary);
   }
 
-  .hover-shadow {
-    transition: box-shadow 0.3s ease;
+  @keyframes rotation_481 {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 
-  .hover-shadow:hover {
-    box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+  /* فرم ثبت نظر جدید */
+  #comment-form {
+    background: rgba(255,255,255,0.94);
+    backdrop-filter: blur(12px);
+    border: 2px solid rgba(37,150,190,0.2);
+    border-radius: 1.25rem;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.12);
   }
 
-  .card {
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  }
-
-  .gallery-item {
-    position: relative;
-    display: block;
-    overflow: hidden;
+  #comment-content {
+    background: white;
+    border: 1px solid #2596be;
     border-radius: 1rem;
+    font-size: 1.1rem;
+    padding: 1.25rem;
   }
 
-  .gallery-item:hover {
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+  #comment-submit {
+    background: linear-gradient(135deg, #2596be, #1e88e5);
+    border: none;
+    box-shadow: 0 8px 20px rgba(37,150,190,0.3);
   }
 
-  .btn-outline-primary, .btn-outline-danger, .btn-outline-secondary, .btn-outline-info {
-    border-width: 2px;
-    font-weight: 500;
-  }
-
-  .btn-outline-primary:hover, .btn-outline-danger:hover, .btn-outline-secondary:hover, .btn-outline-info:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+  #comment-submit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(37,150,190,0.4);
   }
 
   @media (max-width: 768px) {
-    .hero-wrapper {
-      height: 300px;
-    }
-    .hero-content {
-      padding: 1.5rem;
-    }
-    .display-4 {
-      font-size: 2rem;
-    }
+    .hero-wrapper { height: 300px; }
+    .hero-content { padding: 1.5rem; }
+    .display-4 { font-size: 2.5rem; }
+    .comment-text-box { font-size: 1rem; padding: 1rem; max-height: 400px; }
   }
 </style>
 {% endblock %}
@@ -510,9 +563,7 @@
     if (deleteBtn) {
       deleteBtn.addEventListener('click', async function(e) {
         e.preventDefault();
-        if (!confirm('آیا از حذف این صفحه اطمینان دارید؟ این عمل قابل بازگشت نیست.')) {
-          return;
-        }
+        if (!confirm('آیا از حذف این صفحه اطمینان دارید؟ این عمل قابل بازگشت نیست.')) return;
 
         const slug = this.dataset.slug;
         const csrfToken = window.csrfToken;
@@ -545,7 +596,7 @@
     }
   });
 
-  // مدیریت لایت‌باکس گالری (اختیاری، در صورت نبود main.js)
+  // مدیریت لایت‌باکس گالری
   document.querySelectorAll('.gallery-item').forEach(item => {
     item.addEventListener('click', function(e) {
       e.preventDefault();
